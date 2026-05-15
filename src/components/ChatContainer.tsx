@@ -54,7 +54,7 @@ export function ChatContainer({
 
   return (
     <ScrollArea className="flex-1">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-6">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 px-4 py-6 pb-24 sm:pb-28">
         {messages.map((msg, i) => {
           const isLast = i === messages.length - 1;
           const showApproval = !!(

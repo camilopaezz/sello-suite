@@ -18,11 +18,21 @@ import { ChatContainer } from "@/components/ChatContainer";
 import { PromptInput } from "@/components/PromptInput";
 import { AspectRatioSelector } from "@/components/AspectRatioSelector";
 import { ResolutionSelector } from "@/components/ResolutionSelector";
-import { HistorySidebar } from "@/components/HistorySidebar";
+import {
+  HistorySidebar,
+  HistorySidebarPanel,
+} from "@/components/HistorySidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -37,6 +47,7 @@ export default function Home() {
     useState("Nueva conversación");
   const [conversationCreatedAt, setConversationCreatedAt] = useState(Date.now);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [conversationList, setConversationList] = useState<ConversationMeta[]>(
     [],
   );
@@ -77,26 +88,36 @@ export default function Home() {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [messages, conversationId, conversationTitle, conversationCreatedAt, aspectRatio, imageSize]);
+  }, [
+    messages,
+    conversationId,
+    conversationTitle,
+    conversationCreatedAt,
+    aspectRatio,
+    imageSize,
+  ]);
 
-  const generateTitle = useCallback(async (userMsgCount: number) => {
-    if (!conversationId || userMsgCount < 1) return;
-    try {
-      const res = await fetch("/api/title", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: messages.filter((m) => m.role === "user"),
-        }),
-      });
-      const data = await res.json();
-      if (data.title) {
-        setConversationTitle(data.title);
+  const generateTitle = useCallback(
+    async (userMsgCount: number) => {
+      if (!conversationId || userMsgCount < 1) return;
+      try {
+        const res = await fetch("/api/title", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: messages.filter((m) => m.role === "user"),
+          }),
+        });
+        const data = await res.json();
+        if (data.title) {
+          setConversationTitle(data.title);
+        }
+      } catch {
+        /* fail silently */
       }
-    } catch {
-      /* fail silently */
-    }
-  }, [conversationId, messages]);
+    },
+    [conversationId, messages],
+  );
 
   const generateImage = useCallback(
     async (prompt: string) => {
@@ -181,7 +202,11 @@ export default function Home() {
         if (data.type === "ready" && data.detailedPrompt) {
           setMessages((prev) => [
             ...prev,
-            { role: "assistant", content: data.content, detailedPrompt: data.detailedPrompt },
+            {
+              role: "assistant",
+              content: data.content,
+              detailedPrompt: data.detailedPrompt,
+            },
           ]);
           setPendingPrompt(data.detailedPrompt);
         } else {
@@ -218,8 +243,7 @@ export default function Home() {
       ...prev,
       {
         role: "assistant",
-        content:
-          "Ok, sigamos refinando. Cuéntame qué más te gustaría ajustar.",
+        content: "Ok, sigamos refinando. Cuéntame qué más te gustaría ajustar.",
       },
     ]);
   }, []);
@@ -290,9 +314,6 @@ export default function Home() {
 
   return (
     <div className="relative flex h-dvh flex-col bg-background">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120%_80%_at_50%_-20%,rgba(253,224,71,0.25),transparent_60%)]" />
-      <div className="pointer-events-none absolute -z-10 right-0 top-0 h-72 w-72 translate-x-1/3 -translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(14,165,233,0.16),transparent_60%)]" />
-      <div className="pointer-events-none absolute -z-10 bottom-0 left-0 h-64 w-64 -translate-x-1/3 translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(34,197,94,0.12),transparent_60%)]" />
       <HistorySidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -302,37 +323,95 @@ export default function Home() {
         onNewChat={handleNewChat}
         onRefresh={refreshConversations}
       />
+      <Sheet
+        open={settingsOpen}
+        onOpenChange={(value) => setSettingsOpen(value)}
+      >
+        <SheetContent side="right" className="w-80 gap-0 p-0">
+          <SheetHeader className="p-4">
+            <SheetTitle>Ajustes de generación</SheetTitle>
+            <SheetDescription>
+              Define formato y tamaño antes de generar.
+            </SheetDescription>
+          </SheetHeader>
+          <Separator />
+          <div className="px-4 py-4">
+            <div className="flex flex-col gap-4">
+              <AspectRatioSelector
+                value={aspectRatio}
+                onChange={setAspectRatio}
+              />
+              <ResolutionSelector
+                imageSize={imageSize}
+                aspectRatio={aspectRatio}
+                onChange={setImageSize}
+              />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-      <header className="shrink-0 border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur animate-in fade-in-0 slide-in-from-top-2 duration-500">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setSidebarOpen(true)}
-            title="Historial"
-          >
-            ☰
-          </Button>
-          <div className="flex size-9 items-center justify-center rounded-xl bg-muted text-lg">
-            🍌
+      <header className="sticky inset-x-0 top-0 z-40 border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur animate-in fade-in-0 slide-in-from-top-2 duration-500">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="grid items-center gap-3 grid-cols-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex items-center gap-2 lg:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setSidebarOpen(true)}
+                  title="Historial"
+                >
+                  ☰
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setSettingsOpen(true)}
+                  title="Ajustes"
+                >
+                  ⚙
+                </Button>
+              </div>
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-lg">
+                🍌
+              </div>
+              <p className="hidden truncate text-xs text-muted-foreground lg:block">
+                Estudio de prompts y generación
+              </p>
+            </div>
+            <div className="min-w-0 text-center">
+              <h1 className="truncate text-sm font-semibold tracking-tight">
+                {conversationTitle || "Nano Banana Studio"}
+              </h1>
+              <p className="text-xs text-muted-foreground lg:hidden">
+                Estudio de prompts y generación
+              </p>
+            </div>
+            <div className="flex min-w-0 items-center justify-end">
+              <Badge variant="secondary" className="shrink-0 text-[10px] ">
+                Gemini 3.1 Flash
+              </Badge>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="truncate text-sm font-semibold tracking-tight">
-              {conversationTitle || "Nano Banana Studio"}
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Estudio de prompts y generación
-            </p>
-          </div>
-          <Badge variant="secondary" className="ml-auto text-[10px]">
-            Gemini 3.1 Flash
-          </Badge>
         </div>
       </header>
 
       <div className="flex-1">
-        <div className="mx-auto w-full max-w-6xl px-4 py-6">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_240px] xl:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="mx-auto w-full max-w-7xl px-4 py-0">
+          <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_240px]">
+            <aside className="hidden lg:flex">
+              <div className="sticky top-24 h-fit w-full">
+                <HistorySidebarPanel
+                  conversations={conversationList}
+                  activeId={conversationId}
+                  onSelect={handleSelectConversation}
+                  onNewChat={handleNewChat}
+                  onRefresh={refreshConversations}
+                />
+              </div>
+            </aside>
+
             <div className="flex min-h-[70vh] flex-col">
               <ChatContainer
                 messages={messages}
@@ -343,33 +422,6 @@ export default function Home() {
                 onReject={handleReject}
                 onRegenerate={handleRegenerate}
               />
-
-              <div className="mt-4 space-y-3 lg:hidden">
-                <Card className="w-full border border-border/80 bg-card/95 py-0 shadow-lg">
-                  <div className="flex flex-col gap-4 px-4 py-4">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Ajustes de generación
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Define formato y tamaño antes de generar.
-                      </p>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                      <AspectRatioSelector
-                        value={aspectRatio}
-                        onChange={setAspectRatio}
-                      />
-                      <ResolutionSelector
-                        imageSize={imageSize}
-                        aspectRatio={aspectRatio}
-                        onChange={setImageSize}
-                      />
-                    </div>
-                  </div>
-                </Card>
-              </div>
-
             </div>
 
             <aside className="hidden lg:flex">
@@ -398,13 +450,20 @@ export default function Home() {
               </Card>
             </aside>
           </div>
-
-          <div className="mt-4">
-            <PromptInput
-              onSend={sendMessage}
-              disabled={isChatLoading || isGenerating || !!pendingPrompt}
-              placeholder={inputPlaceholder}
-            />
+        </div>
+      </div>
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 px-4 pb-5 pt-3 backdrop-blur">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)_240px] lg:gap-6">
+            <div className="hidden lg:block" />
+            <div>
+              <PromptInput
+                onSend={sendMessage}
+                disabled={isChatLoading || isGenerating || !!pendingPrompt}
+                placeholder={inputPlaceholder}
+              />
+            </div>
+            <div className="hidden lg:block" />
           </div>
         </div>
       </div>

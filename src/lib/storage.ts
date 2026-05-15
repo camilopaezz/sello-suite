@@ -1,4 +1,4 @@
-import type { Conversation, ConversationMeta } from "./types";
+import type { Conversation, ConversationMeta, ExportData } from "./types";
 
 const DB_NAME = "NanoBananaStudio";
 const STORE_NAME = "conversations";
@@ -49,6 +49,47 @@ export async function deleteConversation(id: string): Promise<void> {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
+}
+
+export async function getAllConversations(): Promise<Conversation[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const request = tx.objectStore(STORE_NAME).getAll();
+    request.onsuccess = () => resolve(request.result ?? []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function importConversations(
+  conversations: Conversation[]
+): Promise<number> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    let count = 0;
+    tx.oncomplete = () => resolve(count);
+    tx.onerror = () => reject(tx.error);
+    for (const conv of conversations) {
+      const request = tx.objectStore(STORE_NAME).put(conv);
+      request.onsuccess = () => {
+        count++;
+      };
+    }
+  });
+}
+
+export function exportToJsonFile(data: ExportData): void {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `nano-banana-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 export async function listConversations(): Promise<ConversationMeta[]> {

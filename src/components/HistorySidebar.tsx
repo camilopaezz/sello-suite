@@ -1,13 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import type { ConversationMeta } from "@/lib/types";
-import { deleteConversation } from "@/lib/storage";
+import {
+  deleteConversation,
+  getAllConversations,
+  exportToJsonFile,
+} from "@/lib/storage";
+import type { ExportData } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { ImportDialog } from "@/components/ImportDialog";
 
 function formatRelativeTime(ts: number): string {
   const diff = Date.now() - ts;
@@ -67,6 +74,7 @@ interface SidebarContentProps {
   onRefresh: () => void;
   onItemSelected?: () => void;
   className?: string;
+  showCloseButton?: boolean;
 }
 
 function SidebarContent({
@@ -77,7 +85,10 @@ function SidebarContent({
   onRefresh,
   onItemSelected,
   className,
+  showCloseButton = false,
 }: SidebarContentProps) {
+  const [importOpen, setImportOpen] = useState(false);
+
   const groups: GroupedConversations = {};
   for (const conv of conversations) {
     const group = getDateGroup(conv.updatedAt);
@@ -94,12 +105,59 @@ function SidebarContent({
     if (id === activeId) onNewChat();
   }
 
+  async function handleExport() {
+    const all = await getAllConversations();
+    const data: ExportData = {
+      version: 1,
+      exportedAt: Date.now(),
+      app: "Nano Banana Studio",
+      conversations: all,
+    };
+    exportToJsonFile(data);
+  }
+
   return (
     <div className={cn("flex h-full flex-col", className)}>
-      <div className="flex flex-col gap-0.5 p-4">
-        <h2 className="text-sm font-semibold">Conversaciones</h2>
-        <p className="text-xs text-muted-foreground">Tu historial reciente</p>
+      <div className="flex items-start justify-between gap-2 p-4 pb-2">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-sm font-semibold">Conversaciones</h2>
+          <p className="text-xs text-muted-foreground">Tu historial reciente</p>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={handleExport}
+            title="Exportar historial"
+          >
+            ↓
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => setImportOpen(true)}
+            title="Importar historial"
+          >
+            ↑
+          </Button>
+          {showCloseButton && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={onItemSelected}
+              title="Cerrar"
+            >
+              ✕
+            </Button>
+          )}
+        </div>
       </div>
+
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImportComplete={onRefresh}
+      />
       <Separator />
 
       <div className="px-4 pt-3">
@@ -205,7 +263,7 @@ export function HistorySidebar({
 }: HistorySidebarProps) {
   return (
     <Sheet open={open} onOpenChange={(value) => !value && onClose()}>
-      <SheetContent side="left" className="w-80 gap-0 p-0">
+      <SheetContent side="left" showCloseButton={false} className="w-80 gap-0 p-0">
         <SidebarContent
           conversations={conversations}
           activeId={activeId}
@@ -213,6 +271,7 @@ export function HistorySidebar({
           onNewChat={onNewChat}
           onRefresh={onRefresh}
           onItemSelected={onClose}
+          showCloseButton
         />
       </SheetContent>
     </Sheet>

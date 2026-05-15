@@ -79,6 +79,13 @@ export const IMAGE_SIZE_OPTIONS: { label: string; value: ImageSize }[] = [
   { label: "4K (4096px)", value: 4096 },
 ];
 
+export interface ExportData {
+  version: number;
+  exportedAt: number;
+  app: string;
+  conversations: Conversation[];
+}
+
 export function computeDimensions(
   aspectRatio: AspectRatio,
   imageSize: ImageSize

@@ -1,9 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Image from "next/image";
 import type { ConversationMeta } from "@/lib/types";
 import { deleteConversation } from "@/lib/storage";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 function formatRelativeTime(ts: number): string {
   const diff = Date.now() - ts;
@@ -55,16 +64,6 @@ export function HistorySidebar({
   onNewChat,
   onRefresh,
 }: HistorySidebarProps) {
-  const sidebarRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    if (open) document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [open, onClose]);
-
   const groups: GroupedConversations = {};
   for (const conv of conversations) {
     const group = getDateGroup(conv.updatedAt);
@@ -82,112 +81,103 @@ export function HistorySidebar({
   }
 
   return (
-    <>
-      <div
-        className={`fixed inset-0 bg-black/50 z-40 transition-opacity ${
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={onClose}
-      />
-      <aside
-        ref={sidebarRef}
-        className={`fixed top-0 left-0 h-full w-72 bg-zinc-900 border-r border-zinc-800 z-50 flex flex-col transition-transform ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
-          <h2 className="text-sm font-semibold text-zinc-200">Conversaciones</h2>
-          <button
-            onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-300 text-lg leading-none"
+    <Sheet open={open} onOpenChange={(value) => !value && onClose()}>
+      <SheetContent side="left" className="w-80 sm:w-80">
+        <SheetHeader>
+          <SheetTitle>Conversaciones</SheetTitle>
+          <SheetDescription>Tu historial reciente</SheetDescription>
+        </SheetHeader>
+        <Separator />
+
+        <div className="px-4 pt-3">
+          <Button
+            onClick={() => {
+              onNewChat();
+              onClose();
+            }}
+            className="w-full"
           >
-            ✕
-          </button>
+            + Nueva conversación
+          </Button>
         </div>
 
-        <button
-          onClick={() => {
-            onNewChat();
-            onClose();
-          }}
-          className="mx-3 mt-3 mb-2 px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors shrink-0"
-        >
-          + Nueva conversación
-        </button>
-
-        <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-4">
-          {order.map((group) => {
-            const items = groups[group];
-            if (!items) return null;
-            return (
-              <div key={group}>
-                <p className="text-[10px] font-medium text-zinc-600 uppercase tracking-wider mb-1.5 px-1">
-                  {group}
-                </p>
-                <div className="space-y-0.5">
-                  {items.map((conv) => (
-                    <div
-                      key={conv.id}
-                      onClick={() => {
-                        onSelect(conv.id);
-                        onClose();
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
+        <ScrollArea className="mt-3 flex-1 px-4 pb-4">
+          <div className="space-y-4">
+            {order.map((group) => {
+              const items = groups[group];
+              if (!items) return null;
+              return (
+                <div key={group}>
+                  <p className="mb-1.5 px-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {group}
+                  </p>
+                  <div className="space-y-1">
+                    {items.map((conv) => (
+                      <div
+                        key={conv.id}
+                        onClick={() => {
                           onSelect(conv.id);
                           onClose();
-                        }
-                      }}
-                      role="button"
-                      tabIndex={0}
-                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer ${
-                        conv.id === activeId
-                          ? "bg-zinc-800"
-                          : "hover:bg-zinc-800/50"
-                      }`}
-                    >
-                      <div className="w-8 h-8 rounded-md bg-zinc-800 shrink-0 overflow-hidden relative flex items-center justify-center">
-                        {conv.thumbnail ? (
-                          <Image
-                            src={`data:image/png;base64,${conv.thumbnail}`}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <span className="text-sm">🍌</span>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-zinc-200 truncate">
-                          {conv.title}
-                        </p>
-                        <p className="text-[10px] text-zinc-600">
-                          {formatRelativeTime(conv.updatedAt)}
-                        </p>
-                      </div>
-                      <button
-                        onClick={(e) => handleDelete(e, conv.id)}
-                        className="text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all shrink-0 text-xs"
-                        title="Eliminar"
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            onSelect(conv.id);
+                            onClose();
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        className={`group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors ${
+                          conv.id === activeId
+                            ? "bg-muted"
+                            : "hover:bg-muted/60"
+                        }`}
                       >
-                        🗑
-                      </button>
-                    </div>
-                  ))}
+                        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-muted/50">
+                          {conv.thumbnail ? (
+                            <Image
+                              src={`data:image/png;base64,${conv.thumbnail}`}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="text-sm">🍌</span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">
+                            {conv.title}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatRelativeTime(conv.updatedAt)}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={(e) => handleDelete(e, conv.id)}
+                          className="opacity-0 transition-opacity group-hover:opacity-100"
+                          title="Eliminar"
+                        >
+                          🗑
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
-          {conversations.length === 0 && (
-            <p className="text-xs text-zinc-600 text-center pt-8">
-              Sin conversaciones aún
-            </p>
-          )}
-        </div>
-      </aside>
-    </>
+            {conversations.length === 0 && (
+              <p className="pt-8 text-center text-xs text-muted-foreground">
+                Sin conversaciones aún
+              </p>
+            )}
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   );
 }

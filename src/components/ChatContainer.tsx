@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 import type { Message } from "@/lib/types";
 import { ChatMessage } from "./ChatMessage";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatContainerProps {
   messages: Message[];
@@ -31,59 +33,67 @@ export function ChatContainer({
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center text-zinc-500">
-        <div className="text-center space-y-2">
-          <div className="text-4xl">🍌</div>
-          <p className="text-lg font-medium">Nano Banana Studio</p>
-          <p className="text-sm text-zinc-600 max-w-md">
-            Describe la imagen que quieres crear. Haré algunas preguntas
-            para refinar tu idea y la generaré con Gemini.
-          </p>
-        </div>
+      <div className="flex flex-1 items-center justify-center p-6">
+        <Card className="w-full max-w-xl border border-border/60 bg-card/70 py-0 shadow-sm">
+          <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted text-3xl">
+              🍌
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-semibold">Nano Banana Studio</p>
+              <p className="text-sm text-muted-foreground">
+                Describe la imagen que quieres crear. Haré algunas preguntas
+                para refinar tu idea y la generaré con Gemini.
+              </p>
+            </div>
+          </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-3 px-4 py-6 mx-auto max-w-3xl w-full">
-      {messages.map((msg, i) => {
-        const isLast = i === messages.length - 1;
-        const showApproval = !!(
-          isLast && pendingPrompt && msg.detailedPrompt === pendingPrompt
-        );
-        return (
-          <ChatMessage
-            key={i}
-            message={msg}
-            showApproval={showApproval}
-            onApprove={onApprove}
-            onReject={onReject}
-            onRegenerate={onRegenerate}
-          />
-        );
-      })}
-      {isLoading && (
-        <div className="flex justify-start">
-          <div className="bg-zinc-800 rounded-2xl rounded-bl-md px-4 py-3">
-            <div className="flex gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce" />
-              <div className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce [animation-delay:0.1s]" />
-              <div className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce [animation-delay:0.2s]" />
-            </div>
+    <ScrollArea className="flex-1">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-6">
+        {messages.map((msg, i) => {
+          const isLast = i === messages.length - 1;
+          const showApproval = !!(
+            isLast && pendingPrompt && msg.detailedPrompt === pendingPrompt
+          );
+          return (
+            <ChatMessage
+              key={i}
+              message={msg}
+              showApproval={showApproval}
+              onApprove={onApprove}
+              onReject={onReject}
+              onRegenerate={onRegenerate}
+            />
+          );
+        })}
+        {isLoading && (
+          <div className="flex justify-start">
+            <Card className="rounded-2xl rounded-bl-md border border-border/70 bg-muted/60 px-4 py-3">
+              <div className="flex gap-1.5">
+                <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/60" />
+                <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:0.1s]" />
+                <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:0.2s]" />
+              </div>
+            </Card>
           </div>
-        </div>
-      )}
-      {isGenerating && (
-        <div className="flex justify-start">
-          <div className="bg-zinc-800 rounded-2xl rounded-bl-md px-4 py-3">
-            <div className="flex items-center gap-2 text-sm text-zinc-400">
-              <div className="w-4 h-4 border-2 border-zinc-600 border-t-blue-500 rounded-full animate-spin" />
-              Generando imagen...
-            </div>
+        )}
+        {isGenerating && (
+          <div className="flex justify-start">
+            <Card className="rounded-2xl rounded-bl-md border border-border/70 bg-muted/60 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/40 border-t-foreground" />
+                Generando imagen...
+              </div>
+            </Card>
           </div>
-        </div>
-      )}
-      <div ref={bottomRef} />
-    </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+    </ScrollArea>
   );
 }

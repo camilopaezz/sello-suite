@@ -2,6 +2,15 @@
 
 import Image from "next/image";
 import type { Message } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface ChatMessageProps {
   message: Message;
@@ -23,33 +32,37 @@ export function ChatMessage({
   if (showApproval && message.detailedPrompt && !message.imageData) {
     return (
       <div className="flex justify-start">
-        <div className="max-w-[85%] max-w-2xl space-y-3 rounded-2xl rounded-bl-md bg-zinc-800 p-4">
-          <p className="text-sm text-zinc-300 leading-relaxed">
-            {message.content}
-          </p>
-          <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-3">
-            <p className="text-xs text-zinc-500 font-medium mb-1.5">
-              Prompt detallado
+        <Card className="w-full max-w-2xl rounded-2xl rounded-bl-md border border-border/70 bg-card/80 py-0 shadow-sm">
+          <CardHeader className="pb-0 pt-3">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                Prompt listo
+              </Badge>
+              <CardTitle className="text-sm">Revisión final</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3 py-3">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {message.content}
             </p>
-            <p className="text-sm text-zinc-200 leading-relaxed">
-              {message.detailedPrompt}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onApprove}
-              className="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors"
-            >
-              Generar
-            </button>
-            <button
-              onClick={onReject}
-              className="px-4 py-2 text-sm rounded-lg bg-zinc-700 hover:bg-zinc-600 text-zinc-300 transition-colors"
-            >
+            <div className="rounded-lg border border-border/70 bg-muted/50 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">
+                Prompt detallado
+              </p>
+              <p className="text-sm text-foreground/90 leading-relaxed">
+                {message.detailedPrompt}
+              </p>
+            </div>
+          </CardContent>
+          <CardFooter className="justify-end gap-2">
+            <Button variant="outline" onClick={onReject} size="sm">
               Seguir refinando
-            </button>
-          </div>
-        </div>
+            </Button>
+            <Button onClick={onApprove} size="sm">
+              Generar
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
@@ -66,58 +79,59 @@ export function ChatMessage({
 
     return (
       <div className="flex justify-start">
-        <div className="max-w-[80%] max-w-xl space-y-3 rounded-2xl rounded-bl-md bg-zinc-800 p-3">
-          <p className="text-sm text-zinc-300 leading-relaxed">
-            {message.content}
-          </p>
-          <div className="rounded-lg border border-zinc-700 overflow-hidden">
-            <Image
-              src={dataUrl}
-              alt="Generated image"
-              width={800}
-              height={600}
-              className="w-full h-auto max-h-[75vh] object-contain"
-              unoptimized
-            />
-          </div>
-          <details className="group">
-            <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300">
-              Prompt utilizado
-            </summary>
-            <p className="mt-1.5 text-xs text-zinc-400 leading-relaxed">
-              {message.detailedPrompt}
+        <Card className="w-full max-w-xl rounded-2xl rounded-bl-md border border-border/70 bg-card/80 py-0 shadow-sm">
+          <CardContent className="space-y-3 py-3">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {message.content}
             </p>
-          </details>
-          <div className="flex gap-2">
-            <button
-              onClick={handleDownload}
-              className="px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors"
-            >
+            <div className="overflow-hidden rounded-lg border border-border/70 bg-muted/30">
+              <Image
+                src={dataUrl}
+                alt="Generated image"
+                width={800}
+                height={600}
+                className="h-auto max-h-[75vh] w-full object-contain"
+                unoptimized
+              />
+            </div>
+            <details className="group">
+              <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+                Prompt utilizado
+              </summary>
+              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                {message.detailedPrompt}
+              </p>
+            </details>
+          </CardContent>
+          <CardFooter className="justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={handleDownload}>
               Descargar
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
               onClick={() => onRegenerate?.(message.detailedPrompt!)}
-              className="px-3 py-1.5 text-xs rounded-lg bg-zinc-700 hover:bg-zinc-600 text-zinc-300 transition-colors"
             >
               Regenerar
-            </button>
-          </div>
-        </div>
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-[80%] max-w-xl rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+      <Card
+        className={`max-w-xl rounded-2xl border border-border/70 py-0 shadow-sm ${
           isUser
-            ? "bg-blue-600 text-white rounded-br-md"
-            : "bg-zinc-800 text-zinc-100 rounded-bl-md"
+            ? "bg-primary text-primary-foreground rounded-br-md"
+            : "bg-card/80 text-foreground rounded-bl-md"
         }`}
       >
-        {message.content}
-      </div>
+        <CardContent className="px-4 py-3 text-sm leading-relaxed">
+          {message.content}
+        </CardContent>
+      </Card>
     </div>
   );
 }

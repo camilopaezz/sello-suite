@@ -2,6 +2,7 @@
 
 import type { ImageSize, AspectRatio } from "@/lib/types";
 import { IMAGE_SIZE_OPTIONS, computeDimensions } from "@/lib/types";
+import { Button } from "@/components/ui/button";
 
 interface ResolutionSelectorProps {
   imageSize: ImageSize;
@@ -18,23 +19,23 @@ export function ResolutionSelector({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs text-zinc-500 font-medium">Resolución</label>
-      <div className="flex gap-1 overflow-x-auto pb-1">
+      <label className="text-xs font-medium text-muted-foreground">
+        Resolución
+      </label>
+      <div className="flex flex-wrap gap-1">
         {IMAGE_SIZE_OPTIONS.map((opt) => (
-          <button
+          <Button
             key={opt.value}
             onClick={() => onChange(opt.value)}
-            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              imageSize === opt.value
-                ? "bg-blue-600 text-white"
-                : "bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
-            }`}
+            size="xs"
+            variant={imageSize === opt.value ? "default" : "outline"}
+            className="shrink-0"
           >
             {opt.label}
-          </button>
+          </Button>
         ))}
       </div>
-      <p className="text-[10px] text-zinc-600">{dims}</p>
+      <p className="text-[10px] text-muted-foreground">{dims}</p>
     </div>
   );
 }

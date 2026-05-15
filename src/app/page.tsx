@@ -19,6 +19,10 @@ import { PromptInput } from "@/components/PromptInput";
 import { AspectRatioSelector } from "@/components/AspectRatioSelector";
 import { ResolutionSelector } from "@/components/ResolutionSelector";
 import { HistorySidebar } from "@/components/HistorySidebar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -285,7 +289,10 @@ export default function Home() {
       : "Haz ajustes...";
 
   return (
-    <div className="flex flex-col h-dvh bg-zinc-950 text-zinc-100">
+    <div className="relative flex h-dvh flex-col bg-background">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120%_80%_at_50%_-20%,rgba(253,224,71,0.25),transparent_60%)]" />
+      <div className="pointer-events-none absolute -z-10 right-0 top-0 h-72 w-72 translate-x-1/3 -translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(14,165,233,0.16),transparent_60%)]" />
+      <div className="pointer-events-none absolute -z-10 bottom-0 left-0 h-64 w-64 -translate-x-1/3 translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(34,197,94,0.12),transparent_60%)]" />
       <HistorySidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -296,55 +303,109 @@ export default function Home() {
         onRefresh={refreshConversations}
       />
 
-      <header className="shrink-0 border-b border-zinc-800 px-4 py-3">
-        <div className="mx-auto max-w-3xl flex items-center gap-3">
-          <button
+      <header className="shrink-0 border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur animate-in fade-in-0 slide-in-from-top-2 duration-500">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setSidebarOpen(true)}
-            className="text-zinc-400 hover:text-zinc-200 text-lg leading-none"
             title="Historial"
           >
             ☰
-          </button>
-          <span className="text-xl">🍌</span>
+          </Button>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-muted text-lg">
+            🍌
+          </div>
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold tracking-tight truncate">
+            <h1 className="truncate text-sm font-semibold tracking-tight">
               {conversationTitle || "Nano Banana Studio"}
             </h1>
+            <p className="text-xs text-muted-foreground">
+              Estudio de prompts y generación
+            </p>
           </div>
-          <span className="text-[10px] text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded-full ml-auto shrink-0">
+          <Badge variant="secondary" className="ml-auto text-[10px]">
             Gemini 3.1 Flash
-          </span>
+          </Badge>
         </div>
       </header>
 
-      <ChatContainer
-        messages={messages}
-        isLoading={isChatLoading}
-        isGenerating={isGenerating}
-        pendingPrompt={pendingPrompt}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        onRegenerate={handleRegenerate}
-      />
+      <div className="flex-1">
+        <div className="mx-auto w-full max-w-6xl px-4 py-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_240px] xl:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="flex min-h-[70vh] flex-col">
+              <ChatContainer
+                messages={messages}
+                isLoading={isChatLoading}
+                isGenerating={isGenerating}
+                pendingPrompt={pendingPrompt}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onRegenerate={handleRegenerate}
+              />
 
-      <div className="shrink-0 border-t border-zinc-800 bg-zinc-900/80 px-4 py-4">
-        <div className="mx-auto max-w-3xl space-y-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-            <AspectRatioSelector
-              value={aspectRatio}
-              onChange={setAspectRatio}
-            />
-            <ResolutionSelector
-              imageSize={imageSize}
-              aspectRatio={aspectRatio}
-              onChange={setImageSize}
+              <div className="mt-4 space-y-3 lg:hidden">
+                <Card className="w-full border border-border/80 bg-card/95 py-0 shadow-lg">
+                  <div className="flex flex-col gap-4 px-4 py-4">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Ajustes de generación
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Define formato y tamaño antes de generar.
+                      </p>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                      <AspectRatioSelector
+                        value={aspectRatio}
+                        onChange={setAspectRatio}
+                      />
+                      <ResolutionSelector
+                        imageSize={imageSize}
+                        aspectRatio={aspectRatio}
+                        onChange={setImageSize}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+            </div>
+
+            <aside className="hidden lg:flex">
+              <Card className="sticky top-24 h-fit w-full border border-border/80 bg-card/95 py-0 shadow-lg">
+                <div className="flex flex-col gap-4 px-4 py-4">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Ajustes de generación
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Define formato y tamaño antes de generar.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <AspectRatioSelector
+                      value={aspectRatio}
+                      onChange={setAspectRatio}
+                    />
+                    <ResolutionSelector
+                      imageSize={imageSize}
+                      aspectRatio={aspectRatio}
+                      onChange={setImageSize}
+                    />
+                  </div>
+                </div>
+              </Card>
+            </aside>
+          </div>
+
+          <div className="mt-4">
+            <PromptInput
+              onSend={sendMessage}
+              disabled={isChatLoading || isGenerating || !!pendingPrompt}
+              placeholder={inputPlaceholder}
             />
           </div>
-          <PromptInput
-            onSend={sendMessage}
-            disabled={isChatLoading || isGenerating || !!pendingPrompt}
-            placeholder={inputPlaceholder}
-          />
         </div>
       </div>
     </div>

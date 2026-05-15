@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 interface PromptInputProps {
   onSend: (message: string) => void;
@@ -32,22 +34,18 @@ export function PromptInput({
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
-      <textarea
+      <Textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         rows={1}
         disabled={disabled}
-        className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+        className="min-h-[48px] flex-1 resize-none text-sm"
       />
-      <button
-        type="submit"
-        disabled={disabled || !value.trim()}
-        className="shrink-0 rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
+      <Button type="submit" disabled={disabled || !value.trim()}>
         Enviar
-      </button>
+      </Button>
     </form>
   );
 }

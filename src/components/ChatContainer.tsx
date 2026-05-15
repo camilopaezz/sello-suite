@@ -8,6 +8,9 @@ interface ChatContainerProps {
   messages: Message[];
   isLoading: boolean;
   isGenerating: boolean;
+  pendingPrompt: string | null;
+  onApprove: () => void;
+  onReject: () => void;
   onRegenerate: (detailedPrompt: string) => void;
 }
 
@@ -15,6 +18,9 @@ export function ChatContainer({
   messages,
   isLoading,
   isGenerating,
+  pendingPrompt,
+  onApprove,
+  onReject,
   onRegenerate,
 }: ChatContainerProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -30,8 +36,8 @@ export function ChatContainer({
           <div className="text-4xl">🍌</div>
           <p className="text-lg font-medium">Nano Banana Studio</p>
           <p className="text-sm text-zinc-600 max-w-md">
-            Describe the image you want to create. I&apos;ll ask a few questions
-            to refine your idea, then generate it with Gemini.
+            Describe la imagen que quieres crear. Haré algunas preguntas
+            para refinar tu idea y la generaré con Gemini.
           </p>
         </div>
       </div>
@@ -39,10 +45,23 @@ export function ChatContainer({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-3 px-4 py-6">
-      {messages.map((msg, i) => (
-        <ChatMessage key={i} message={msg} onRegenerate={onRegenerate} />
-      ))}
+    <div className="flex-1 overflow-y-auto space-y-3 px-4 py-6 mx-auto max-w-3xl w-full">
+      {messages.map((msg, i) => {
+        const isLast = i === messages.length - 1;
+        const showApproval = !!(
+          isLast && pendingPrompt && msg.detailedPrompt === pendingPrompt
+        );
+        return (
+          <ChatMessage
+            key={i}
+            message={msg}
+            showApproval={showApproval}
+            onApprove={onApprove}
+            onReject={onReject}
+            onRegenerate={onRegenerate}
+          />
+        );
+      })}
       {isLoading && (
         <div className="flex justify-start">
           <div className="bg-zinc-800 rounded-2xl rounded-bl-md px-4 py-3">
@@ -59,7 +78,7 @@ export function ChatContainer({
           <div className="bg-zinc-800 rounded-2xl rounded-bl-md px-4 py-3">
             <div className="flex items-center gap-2 text-sm text-zinc-400">
               <div className="w-4 h-4 border-2 border-zinc-600 border-t-blue-500 rounded-full animate-spin" />
-              Generating image...
+              Generando imagen...
             </div>
           </div>
         </div>

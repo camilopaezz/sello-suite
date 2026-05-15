@@ -11,7 +11,7 @@ interface PromptInputProps {
 export function PromptInput({
   onSend,
   disabled,
-  placeholder = "Describe the image you want...",
+  placeholder = "Describe la imagen que quieres crear...",
 }: PromptInputProps) {
   const [value, setValue] = useState("");
 
@@ -46,7 +46,7 @@ export function PromptInput({
         disabled={disabled || !value.trim()}
         className="shrink-0 rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Send
+        Enviar
       </button>
     </form>
   );

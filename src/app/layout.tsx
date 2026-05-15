@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Nano Banana Studio",
   description:
-    "Generate images using Google Gemini — describe your idea, refine with AI, and create.",
+    "Genera imágenes con Google Gemini — describe tu idea, refina con IA y crea.",
 };
 
 export default function RootLayout({

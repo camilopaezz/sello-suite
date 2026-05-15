@@ -26,23 +26,23 @@ export default function Home() {
   const [imageSize, setImageSize] = useState<ImageSize>(1024);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
 
-  const [conversationId, setConversationId] = useState<string | null>(null);
-  const [conversationTitle, setConversationTitle] = useState("New Chat");
-  const [conversationCreatedAt, setConversationCreatedAt] = useState(0);
+  const [conversationId, setConversationId] = useState<string>(generateId);
+  const [conversationTitle, setConversationTitle] =
+    useState("Nueva conversación");
+  const [conversationCreatedAt, setConversationCreatedAt] = useState(Date.now);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversationList, setConversationList] = useState<ConversationMeta[]>(
-    []
+    [],
   );
 
   const hasGeneratedTitle = useRef(false);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
-    const convId = generateId();
-    const now = Date.now();
-    setConversationId(convId);
-    setConversationCreatedAt(now);
     refreshConversations();
   }, []);
 
@@ -73,9 +73,9 @@ export default function Home() {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [messages, conversationId, conversationTitle, aspectRatio, imageSize]);
+  }, [messages, conversationId, conversationTitle, conversationCreatedAt, aspectRatio, imageSize]);
 
-  async function generateTitle(userMsgCount: number) {
+  const generateTitle = useCallback(async (userMsgCount: number) => {
     if (!conversationId || userMsgCount < 1) return;
     try {
       const res = await fetch("/api/title", {
@@ -92,7 +92,7 @@ export default function Home() {
     } catch {
       /* fail silently */
     }
-  }
+  }, [conversationId, messages]);
 
   const generateImage = useCallback(
     async (prompt: string) => {
@@ -112,7 +112,7 @@ export default function Home() {
             ...prev,
             {
               role: "assistant",
-              content: `Generation error: ${data.error}`,
+              content: `Error de generación: ${data.error}`,
             },
           ]);
           return;
@@ -123,7 +123,7 @@ export default function Home() {
             ...prev,
             {
               role: "assistant" as const,
-              content: "Here's your image!",
+              content: "¡Aquí está tu imagen!",
               imageData: data.image,
               mimeType: data.mimeType,
               detailedPrompt: prompt,
@@ -134,31 +134,26 @@ export default function Home() {
 
         if (!hasGeneratedTitle.current) {
           hasGeneratedTitle.current = true;
-          generateTitle(
-            messages.filter((m) => m.role === "user").length
-          );
+          generateTitle(messages.filter((m) => m.role === "user").length);
         }
       } catch {
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: "Error: Failed to generate the image.",
+            content: "Error: No se pudo generar la imagen.",
           },
         ]);
       } finally {
         setIsGenerating(false);
       }
     },
-    [aspectRatio, imageSize, messages]
+    [aspectRatio, imageSize, messages, generateTitle],
   );
 
   const sendMessage = useCallback(
     async (content: string) => {
-      const newMessages: Message[] = [
-        ...messages,
-        { role: "user", content },
-      ];
+      const newMessages: Message[] = [...messages, { role: "user", content }];
       setMessages(newMessages);
       setIsChatLoading(true);
 
@@ -174,40 +169,62 @@ export default function Home() {
         if (data.error) {
           setMessages((prev) => [
             ...prev,
-            { role: "assistant", content: `Error: ${data.error}` },
+            { role: "assistant", content: `${data.error}` },
           ]);
           return;
         }
 
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: data.content },
-        ]);
-
         if (data.type === "ready" && data.detailedPrompt) {
-          setIsChatLoading(false);
-          await generateImage(data.detailedPrompt);
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: data.content, detailedPrompt: data.detailedPrompt },
+          ]);
+          setPendingPrompt(data.detailedPrompt);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: data.content },
+          ]);
         }
       } catch {
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: "Error: Failed to communicate with the server.",
+            content: "Error: No se pudo conectar con el servidor.",
           },
         ]);
       } finally {
         setIsChatLoading(false);
       }
     },
-    [messages, aspectRatio, generateImage]
+    [messages, aspectRatio, setPendingPrompt],
   );
+
+  const handleApprove = useCallback(async () => {
+    if (pendingPrompt) {
+      await generateImage(pendingPrompt);
+      setPendingPrompt(null);
+    }
+  }, [pendingPrompt, generateImage]);
+
+  const handleReject = useCallback(() => {
+    setPendingPrompt(null);
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content:
+          "Ok, sigamos refinando. Cuéntame qué más te gustaría ajustar.",
+      },
+    ]);
+  }, []);
 
   const handleRegenerate = useCallback(
     (detailedPrompt: string) => {
       generateImage(detailedPrompt);
     },
-    [generateImage]
+    [generateImage],
   );
 
   async function handleSelectConversation(id: string) {
@@ -253,7 +270,7 @@ export default function Home() {
 
     const now = Date.now();
     setConversationId(generateId());
-    setConversationTitle("New Chat");
+    setConversationTitle("Nueva conversación");
     setConversationCreatedAt(now);
     setMessages([]);
     setAspectRatio("1:1");
@@ -264,8 +281,8 @@ export default function Home() {
 
   const inputPlaceholder =
     messages.length === 0
-      ? "Describe the image you want..."
-      : "Refine it further...";
+      ? "Describe la imagen que quieres crear..."
+      : "Haz ajustes...";
 
   return (
     <div className="flex flex-col h-dvh bg-zinc-950 text-zinc-100">
@@ -284,7 +301,7 @@ export default function Home() {
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-zinc-400 hover:text-zinc-200 text-lg leading-none"
-            title="History"
+            title="Historial"
           >
             ☰
           </button>
@@ -304,13 +321,19 @@ export default function Home() {
         messages={messages}
         isLoading={isChatLoading}
         isGenerating={isGenerating}
+        pendingPrompt={pendingPrompt}
+        onApprove={handleApprove}
+        onReject={handleReject}
         onRegenerate={handleRegenerate}
       />
 
       <div className="shrink-0 border-t border-zinc-800 bg-zinc-900/80 px-4 py-4">
         <div className="mx-auto max-w-3xl space-y-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-            <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+            <AspectRatioSelector
+              value={aspectRatio}
+              onChange={setAspectRatio}
+            />
             <ResolutionSelector
               imageSize={imageSize}
               aspectRatio={aspectRatio}
@@ -319,7 +342,7 @@ export default function Home() {
           </div>
           <PromptInput
             onSend={sendMessage}
-            disabled={isChatLoading || isGenerating}
+            disabled={isChatLoading || isGenerating || !!pendingPrompt}
             placeholder={inputPlaceholder}
           />
         </div>

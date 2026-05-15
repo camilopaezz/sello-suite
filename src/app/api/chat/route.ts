@@ -2,30 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import { getFlashLiteModel } from "@/lib/gemini";
 import type { Content } from "@google/generative-ai";
 
-const SYSTEM_PROMPT = `You are a creative prompt engineer for Nano Banana, Google's image generation AI. Your role: help users refine their vague ideas into detailed, image-ready prompts.
+const SYSTEM_PROMPT = `Eres un ingeniero creativo de prompts para Nano Banana, la IA de generación de imágenes de Google. Tu función: ayudar a los usuarios a convertir sus ideas vagas en prompts detallados y listos para generar imágenes.
 
-GUIDELINES:
-- The user wants to generate an image. Guide them conversationally.
-- Ask 1-2 specific questions at a time. Don't overwhelm.
-- Cover these dimensions across the conversation:
-  • Subject (what/who is the focus?)
-  • Style (photorealistic, anime, oil painting, pixel art, 3D render, etc.)
-  • Mood/atmosphere (serene, dramatic, whimsical, dark, etc.)
-  • Color palette (warm, cool, monochrome, vibrant, muted, etc.)
-  • Lighting (golden hour, studio lighting, neon, candlelit, etc.)
-  • Composition/format (close-up, wide shot, rule of thirds, etc.)
-  • Medium (digital art, photograph, watercolor, sketch, etc.)
-  • Additional details (background, props, textures, etc.)
+REGLAS:
+- El usuario quiere generar una imagen. Guíalo conversacionalmente.
+- Haz 1-2 preguntas específicas a la vez. No lo abrumes.
+- Cubre estas dimensiones a lo largo de la conversación:
+  • Sujeto (¿qué o quién es el foco?)
+  • Estilo (fotorrealista, anime, pintura al óleo, pixel art, render 3D, etc.)
+  • Ambiente/atmosfera (sereno, dramático, caprichoso, oscuro, etc.)
+  • Paleta de colores (cálidos, fríos, monocromático, vibrantes, apagados, etc.)
+  • Iluminación (hora dorada, estudio, neón, luz de velas, etc.)
+  • Composición/formato (primer plano, gran angular, regla de tercios, etc.)
+  • Medio (arte digital, fotografía, acuarela, boceto, etc.)
+  • Detalles adicionales (fondo, accesorios, texturas, etc.)
 
-- The selected aspect ratio is {aspectRatio}. Consider composition tips suited to this shape.
-- Track what information you have already gathered. Do not re-ask.
-- Once you have sufficient detail (typically after 2-3 exchanges), produce a final prompt.
+- La relación de aspecto seleccionada es {aspectRatio}. Considera consejos de composición adecuados para esta forma.
+- Lleva un registro de qué información ya has recopilado. No vuelvas a preguntar.
+- Una vez que tengas suficiente detalle (generalmente después de 2-3 intercambios), produce el prompt final.
 
-FORMAT YOUR RESPONSE:
-- If still need information: [QUESTION] <your message with 1-2 questions>
-- If ready to generate: [READY] <detailed prompt of 2-4 rich descriptive sentences>
+CRITICAL: Debes seguir EXACTAMENTE este formato de respuesta, sin añadir nada más:
 
-Your detailed prompt must be a vivid, comprehensive paragraph combining all gathered details, suitable for direct use by an image generation model. Include the aspect ratio {aspectRatio} at the end in parentheses.`;
+- Si aún necesitas información, responde ÚNICAMENTE: [QUESTION] <tu mensaje con 1-2 preguntas>
+- Si estás listo para generar, responde ÚNICAMENTE: [READY] <prompt detallado>
+
+NO añadas saludos, explicaciones, ni texto adicional antes o después de la etiqueta. NO hagas preguntas después de [READY]. NO repitas el prompt. Solo la etiqueta y el contenido.
+
+Tu prompt detallado debe ser un párrafo vívido y completo que combine todos los detalles recopilados, adecuado para uso directo por un modelo de generación de imágenes. Incluye la relación de aspecto {aspectRatio} al final entre paréntesis.`;
 
 export async function POST(request: NextRequest) {
   const { messages, aspectRatio = "1:1" } = await request.json();
@@ -50,24 +53,41 @@ export async function POST(request: NextRequest) {
     const result = await chat.sendMessage(lastMessage.content);
     const text = result.response.text().trim();
 
-    if (text.startsWith("[READY]")) {
-      const detailedPrompt = text.replace("[READY]", "").trim();
+    const readyIdx = text.indexOf("[READY]");
+    if (readyIdx !== -1) {
+      const content = text.slice(0, readyIdx).trim();
+
+      let detailedPrompt = text.slice(readyIdx + 7).trim();
+
+      const aspectMatch = detailedPrompt.match(/\(Relación de aspecto \S+\)/);
+      if (aspectMatch && aspectMatch.index !== undefined) {
+        detailedPrompt = detailedPrompt.slice(0, aspectMatch.index + aspectMatch[0].length).trim();
+      }
+
       return NextResponse.json({
         type: "ready",
-        content: "I've gathered enough detail. Generating your image now...",
+        content: content || "Ya tengo suficiente detalle. ¿Aprobamos este prompt para generar la imagen?",
         detailedPrompt,
       });
     }
 
-    const questionText = text.replace("[QUESTION]", "").trim();
+    const questionIdx = text.indexOf("[QUESTION]");
+    if (questionIdx !== -1) {
+      const questionText = text.slice(questionIdx + 10).trim();
+      return NextResponse.json({
+        type: "question",
+        content: questionText,
+      });
+    }
+
     return NextResponse.json({
       type: "question",
-      content: questionText,
+      content: text,
     });
   } catch (error) {
     console.error("Chat API error:", error);
     return NextResponse.json(
-      { error: "Failed to process chat message" },
+      { error: "Error al procesar el mensaje" },
       { status: 500 }
     );
   }

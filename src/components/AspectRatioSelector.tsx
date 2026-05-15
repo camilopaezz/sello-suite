@@ -21,7 +21,7 @@ interface AspectRatioSelectorProps {
 export function AspectRatioSelector({ value, onChange }: AspectRatioSelectorProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs text-zinc-500 font-medium">Aspect Ratio</label>
+      <label className="text-xs text-zinc-500 font-medium">Relación de aspecto</label>
       <div className="flex gap-1 overflow-x-auto pb-1">
         {ASPECT_RATIO_OPTIONS.map((opt) => (
           <button

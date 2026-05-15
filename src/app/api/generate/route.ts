@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const { prompt, aspectRatio = "1:1", imageSize = 1024 } = await request.json();
+  const { prompt } = await request.json();
 
   if (!prompt || typeof prompt !== "string") {
-    return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
+    return NextResponse.json({ error: "El prompt es obligatorio" }, { status: 400 });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "GEMINI_API_KEY is not configured" },
+      { error: "GEMINI_API_KEY no está configurada" },
       { status: 500 }
     );
   }
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         .join(" ");
 
       return NextResponse.json(
-        { error: "No image data in response", responseText: text ?? "" },
+        { error: "No hay datos de imagen en la respuesta", responseText: text ?? "" },
         { status: 500 }
       );
     }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Generate API error:", error);
     return NextResponse.json(
-      { error: "Failed to generate image" },
+      { error: "Error al generar la imagen" },
       { status: 500 }
     );
   }

@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import type { ConversationMeta } from "@/lib/types";
 import { deleteConversation } from "@/lib/storage";
 
 function formatRelativeTime(ts: number): string {
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return "ahora";
+  if (mins < 60) return `hace ${mins}m`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `hace ${hours}h`;
   const days = Math.floor(hours / 24);
-  if (days === 1) return "yesterday";
-  if (days < 7) return `${days}d ago`;
+  if (days === 1) return "ayer";
+  if (days < 7) return `hace ${days}d`;
   return new Date(ts).toLocaleDateString();
 }
 
@@ -25,10 +26,10 @@ function getDateGroup(ts: number): string {
       Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())) /
       86400000
   );
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return "This Week";
-  return "Older";
+  if (diffDays === 0) return "Hoy";
+  if (diffDays === 1) return "Ayer";
+  if (diffDays < 7) return "Esta semana";
+  return "Anterior";
 }
 
 interface GroupedConversations {
@@ -71,7 +72,7 @@ export function HistorySidebar({
     groups[group].push(conv);
   }
 
-  const order = ["Today", "Yesterday", "This Week", "Older"];
+  const order = ["Hoy", "Ayer", "Esta semana", "Anterior"];
 
   async function handleDelete(e: React.MouseEvent, id: string) {
     e.stopPropagation();
@@ -95,7 +96,7 @@ export function HistorySidebar({
         }`}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
-          <h2 className="text-sm font-semibold text-zinc-200">Conversations</h2>
+          <h2 className="text-sm font-semibold text-zinc-200">Conversaciones</h2>
           <button
             onClick={onClose}
             className="text-zinc-500 hover:text-zinc-300 text-lg leading-none"
@@ -111,7 +112,7 @@ export function HistorySidebar({
           }}
           className="mx-3 mt-3 mb-2 px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors shrink-0"
         >
-          + New Chat
+          + Nueva conversación
         </button>
 
         <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-4">
@@ -125,24 +126,34 @@ export function HistorySidebar({
                 </p>
                 <div className="space-y-0.5">
                   {items.map((conv) => (
-                    <button
+                    <div
                       key={conv.id}
                       onClick={() => {
                         onSelect(conv.id);
                         onClose();
                       }}
-                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group ${
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          onSelect(conv.id);
+                          onClose();
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer ${
                         conv.id === activeId
                           ? "bg-zinc-800"
                           : "hover:bg-zinc-800/50"
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-md bg-zinc-800 shrink-0 overflow-hidden flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-md bg-zinc-800 shrink-0 overflow-hidden relative flex items-center justify-center">
                         {conv.thumbnail ? (
-                          <img
+                          <Image
                             src={`data:image/png;base64,${conv.thumbnail}`}
                             alt=""
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            unoptimized
                           />
                         ) : (
                           <span className="text-sm">🍌</span>
@@ -159,11 +170,11 @@ export function HistorySidebar({
                       <button
                         onClick={(e) => handleDelete(e, conv.id)}
                         className="text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all shrink-0 text-xs"
-                        title="Delete"
+                        title="Eliminar"
                       >
                         🗑
                       </button>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -172,7 +183,7 @@ export function HistorySidebar({
 
           {conversations.length === 0 && (
             <p className="text-xs text-zinc-600 text-center pt-8">
-              No conversations yet
+              Sin conversaciones aún
             </p>
           )}
         </div>

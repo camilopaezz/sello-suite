@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   const { messages } = await request.json();
 
   if (!messages || messages.length === 0) {
-    return NextResponse.json({ title: "New Chat" });
+    return NextResponse.json({ title: "Nueva conversación" });
   }
 
   try {
@@ -23,14 +23,14 @@ export async function POST(request: NextRequest) {
     const model = getFlashLiteModel();
 
     const result = await model.generateContent(
-      `Generate a short descriptive title (max 6 words, no quotes, no markdown) for this image generation conversation. The user wants to create: ${truncated}`
+      `Genera un título descriptivo corto (máximo 6 palabras, sin comillas, sin markdown) para esta conversación de generación de imágenes. El usuario quiere crear: ${truncated}`
     );
 
     const title = result.response.text().trim();
     return NextResponse.json({ title });
   } catch {
     return NextResponse.json({
-      title: `Chat ${new Date().toLocaleDateString()}`,
+      title: `Chat del ${new Date().toLocaleDateString()}`,
     });
   }
 }

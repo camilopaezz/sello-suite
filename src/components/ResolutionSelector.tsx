@@ -18,7 +18,7 @@ export function ResolutionSelector({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs text-zinc-500 font-medium">Resolution</label>
+      <label className="text-xs text-zinc-500 font-medium">Resolución</label>
       <div className="flex gap-1 overflow-x-auto pb-1">
         {IMAGE_SIZE_OPTIONS.map((opt) => (
           <button

@@ -10,6 +10,7 @@ interface ChatContainerProps {
   messages: Message[];
   isLoading: boolean;
   isGenerating: boolean;
+  isModifyingApproval?: boolean;
   pendingPrompt: string | null;
   onApprove: () => void;
   onReject: () => void;
@@ -20,6 +21,7 @@ export function ChatContainer({
   messages,
   isLoading,
   isGenerating,
+  isModifyingApproval,
   pendingPrompt,
   onApprove,
   onReject,
@@ -65,6 +67,7 @@ export function ChatContainer({
               key={i}
               message={msg}
               showApproval={showApproval}
+              isModification={!!isModifyingApproval}
               onApprove={onApprove}
               onReject={onReject}
               onRegenerate={onRegenerate}

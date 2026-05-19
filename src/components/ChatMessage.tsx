@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 interface ChatMessageProps {
   message: Message;
   showApproval?: boolean;
+  isModification?: boolean;
   onApprove?: () => void;
   onReject?: () => void;
   onRegenerate?: (detailedPrompt: string) => void;
@@ -23,6 +24,7 @@ interface ChatMessageProps {
 export function ChatMessage({
   message,
   showApproval,
+  isModification,
   onApprove,
   onReject,
   onRegenerate,
@@ -36,9 +38,11 @@ export function ChatMessage({
           <CardHeader className="pb-0 pt-3">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
-                Prompt listo
+                {isModification ? "Modificación" : "Prompt listo"}
               </Badge>
-              <CardTitle className="text-sm">Revisión final</CardTitle>
+              <CardTitle className="text-sm">
+                {isModification ? "Revisar modificación" : "Revisión final"}
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 py-3">
@@ -47,7 +51,7 @@ export function ChatMessage({
             </p>
             <div className="rounded-lg border border-border/70 bg-muted/50 p-3">
               <p className="text-xs font-medium text-muted-foreground mb-1.5">
-                Prompt detallado
+                Prompt de modificación
               </p>
               <p className="text-sm text-foreground/90 leading-relaxed">
                 {message.detailedPrompt}
@@ -59,7 +63,7 @@ export function ChatMessage({
               Seguir refinando
             </Button>
             <Button onClick={onApprove} size="sm">
-              Generar
+              {isModification ? "Modificar" : "Generar"}
             </Button>
           </CardFooter>
         </Card>

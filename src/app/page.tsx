@@ -40,6 +40,8 @@ export default function Home() {
   const [imageSize, setImageSize] = useState<ImageSize>(1024);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isModifying, setIsModifying] = useState(false);
+  const [isModifyingApproval, setIsModifyingApproval] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
 
   const [conversationId, setConversationId] = useState<string>(generateId);
@@ -56,6 +58,7 @@ export default function Home() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const lastImageRef = useRef<{ data: string; mimeType: string } | null>(null);
 
   useEffect(() => {
     refreshConversations();
@@ -230,15 +233,143 @@ export default function Home() {
     [messages, aspectRatio, setPendingPrompt],
   );
 
+  const sendModification = useCallback(
+    async (content: string) => {
+      const lastImage = messages.findLast((m) => m.imageData);
+      if (!lastImage) return;
+
+      lastImageRef.current = {
+        data: lastImage.imageData!,
+        mimeType: lastImage.mimeType || "image/png",
+      };
+
+      const newMessages: Message[] = [...messages, { role: "user", content }];
+      setMessages(newMessages);
+      setIsModifying(true);
+
+      try {
+        const res = await fetch("/api/modify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: newMessages,
+            previousPrompt: lastImage.detailedPrompt || "",
+            aspectRatio,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: `Error: ${data.error}` },
+          ]);
+          return;
+        }
+
+        if (data.type === "ready" && data.improvedPrompt) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: data.content,
+              detailedPrompt: data.improvedPrompt,
+            },
+          ]);
+          setPendingPrompt(data.improvedPrompt);
+          setIsModifyingApproval(true);
+        }
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Error: No se pudo procesar la modificación.",
+          },
+        ]);
+      } finally {
+        setIsModifying(false);
+      }
+    },
+    [messages, aspectRatio],
+  );
+
+  const modifyImage = useCallback(
+    async (prompt: string) => {
+      setIsGenerating(true);
+
+      const prev = lastImageRef.current;
+
+      try {
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt,
+            aspectRatio,
+            imageSize,
+            previousImage: prev?.data,
+            previousMimeType: prev?.mimeType,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `Error de modificación: ${data.error}`,
+            },
+          ]);
+          return;
+        }
+
+        setMessages((prev) => {
+          const updated = [
+            ...prev,
+            {
+              role: "assistant" as const,
+              content: "¡Aquí está tu imagen modificada!",
+              imageData: data.image,
+              mimeType: data.mimeType,
+              detailedPrompt: prompt,
+            },
+          ];
+          return updated;
+        });
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Error: No se pudo modificar la imagen.",
+          },
+        ]);
+      } finally {
+        setIsGenerating(false);
+      }
+    },
+    [aspectRatio, imageSize],
+  );
+
   const handleApprove = useCallback(async () => {
     if (pendingPrompt) {
-      await generateImage(pendingPrompt);
+      if (isModifyingApproval) {
+        await modifyImage(pendingPrompt);
+      } else {
+        await generateImage(pendingPrompt);
+      }
       setPendingPrompt(null);
+      setIsModifyingApproval(false);
     }
-  }, [pendingPrompt, generateImage]);
+  }, [pendingPrompt, generateImage, modifyImage, isModifyingApproval]);
 
   const handleReject = useCallback(() => {
     setPendingPrompt(null);
+    setIsModifyingApproval(false);
     setMessages((prev) => [
       ...prev,
       {
@@ -256,6 +387,8 @@ export default function Home() {
   );
 
   async function handleSelectConversation(id: string) {
+    setPendingPrompt(null);
+    setIsModifyingApproval(false);
     if (conversationId && messages.length > 0) {
       const conv: Conversation = {
         id: conversationId,
@@ -283,6 +416,9 @@ export default function Home() {
   }
 
   async function handleNewChat() {
+    setPendingPrompt(null);
+    setIsModifyingApproval(false);
+    lastImageRef.current = null;
     if (conversationId && messages.length > 0) {
       const conv: Conversation = {
         id: conversationId,
@@ -307,10 +443,25 @@ export default function Home() {
     refreshConversations();
   }
 
+  const hasGeneratedImage = messages.some((m) => m.imageData);
+
+  const handleSend = useCallback(
+    (content: string) => {
+      if (hasGeneratedImage) {
+        sendModification(content);
+      } else {
+        sendMessage(content);
+      }
+    },
+    [hasGeneratedImage, sendModification, sendMessage],
+  );
+
   const inputPlaceholder =
     messages.length === 0
       ? "Describe la imagen que quieres crear..."
-      : "Haz ajustes...";
+      : hasGeneratedImage
+        ? "Describe los cambios que quieres hacer..."
+        : "Haz ajustes...";
 
   return (
     <div className="relative flex h-dvh flex-col bg-background">
@@ -415,8 +566,9 @@ export default function Home() {
             <div className="flex min-h-[70vh] flex-col">
               <ChatContainer
                 messages={messages}
-                isLoading={isChatLoading}
+                isLoading={isChatLoading || isModifying}
                 isGenerating={isGenerating}
+                isModifyingApproval={isModifyingApproval}
                 pendingPrompt={pendingPrompt}
                 onApprove={handleApprove}
                 onReject={handleReject}
@@ -458,8 +610,8 @@ export default function Home() {
             <div className="hidden lg:block" />
             <div>
               <PromptInput
-                onSend={sendMessage}
-                disabled={isChatLoading || isGenerating || !!pendingPrompt}
+                onSend={handleSend}
+                disabled={isChatLoading || isModifying || isGenerating || !!pendingPrompt}
                 placeholder={inputPlaceholder}
               />
             </div>

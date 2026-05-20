@@ -4,6 +4,7 @@
 pnpm-workspace.yaml
 /node_modules
 /.pnp
+.pnpm-store/
 .pnp.*
 .yarn/*
 !.yarn/patches

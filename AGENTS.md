@@ -22,7 +22,7 @@ This is an AI-powered image generation application built with Next.js 16 and dep
 - `npm run dev` - Standard Next.js local development server.
 - `npm run lint` / `npm run lint:fix` - ESLint check or auto-fix.
 - `npm run format` / `npm run format:check` - Prettier write or check.
-- Pre-commit (Husky + lint-staged) runs ESLint and Prettier on staged files automatically.
+- Pre-commit (Husky) runs lint-staged (ESLint + Prettier on staged files), then `npm run build` to verify the app compiles before the commit is created.
 - `npm run preview` - Builds OpenNext artifacts and previews the Cloudflare Worker locally (crucial for verifying edge compatibility before deploying).
 - `npm run deploy` - Deploys the application to Cloudflare.
 - `npm run cf-typegen` - Run this whenever you modify bindings in `wrangler.jsonc` to regenerate `cloudflare-env.d.ts`.

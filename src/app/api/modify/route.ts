@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
     aspectRatio = "1:1",
   } = await request.json();
 
-  const lastMessage = messages[messages.length - 1];
+  const messagesArray = messages as Message[];
+  const lastMessage = messagesArray[messagesArray.length - 1];
 
   if (!lastMessage || lastMessage.role !== "user") {
     return NextResponse.json(
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const conversationText = (messages as Message[])
+  const conversationText = messagesArray
     .slice(0, -1)
     .map((m) => `${m.role === "user" ? "Usuario" : "Asistente"}: ${m.content}`)
     .join("\n");

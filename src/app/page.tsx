@@ -295,7 +295,7 @@ export default function Home() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: newMessages,
-            previousPrompt: lastImage.detailedPrompt || "",
+            previousPrompt: lastImage?.detailedPrompt || "",
             aspectRatio,
           }),
         });

@@ -1,9 +1,0 @@
-allowBuilds:
-  esbuild: true
-  msw: true
-  sharp: true
-  unrs-resolver: true
-  workerd: true
-minimumReleaseAgeExclude:
-  - postcss@8.5.10
-  - ws@8.20.1

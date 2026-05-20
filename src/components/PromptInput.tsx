@@ -5,24 +5,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 interface PromptInputProps {
+  value: string;
+  onChange: (val: string) => void;
   onSend: (message: string) => void;
   disabled: boolean;
   placeholder?: string;
 }
 
 export function PromptInput({
+  value,
+  onChange,
   onSend,
   disabled,
   placeholder = "Describe la imagen que quieres crear...",
 }: PromptInputProps) {
-  const [value, setValue] = useState("");
-
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
     onSend(trimmed);
-    setValue("");
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
@@ -36,7 +37,7 @@ export function PromptInput({
     <form onSubmit={handleSubmit} className="flex gap-2">
       <Textarea
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         rows={1}

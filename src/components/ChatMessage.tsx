@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import type { Message } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,18 @@ export function ChatMessage({
   onRegenerate,
 }: ChatMessageProps) {
   const isUser = message.role === "user";
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!message.detailedPrompt) return;
+    try {
+      await navigator.clipboard.writeText(message.detailedPrompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy prompt: ", err);
+    }
+  };
 
   if (showApproval && message.detailedPrompt && !message.imageData) {
     return (
@@ -107,13 +120,17 @@ export function ChatMessage({
               </p>
             </details>
           </CardContent>
-          <CardFooter className="justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={handleDownload}>
+          <CardFooter className="flex flex-wrap justify-end gap-1.5 sm:gap-2">
+            <Button variant="outline" size="sm" onClick={handleDownload} title="Descargar imagen">
               Descargar
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleCopy} title="Copiar prompt al portapapeles">
+              {copied ? "Copiado" : "Copiar"}
             </Button>
             <Button
               size="sm"
               onClick={() => onRegenerate?.(message.detailedPrompt!)}
+              title="Regenerar esta imagen"
             >
               Regenerar
             </Button>

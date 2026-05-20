@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const { prompt, previousImage, previousMimeType } = await request.json();
+  const { prompt, previousImage, previousMimeType, aspectRatio, imageSize } = await request.json();
 
   if (!prompt || typeof prompt !== "string") {
     return NextResponse.json({ error: "El prompt es obligatorio" }, { status: 400 });
@@ -27,6 +27,18 @@ export async function POST(request: NextRequest) {
     }
     parts.push({ text: prompt });
 
+    const sizeMap: Record<number, string> = {
+      512: "0.5K",
+      1024: "1K",
+      2048: "2K",
+      4096: "4K",
+    };
+    const mappedSize = typeof imageSize === "number" ? sizeMap[imageSize] : undefined;
+
+    const imageConfig: Record<string, unknown> = {};
+    if (aspectRatio) imageConfig.aspectRatio = aspectRatio;
+    if (mappedSize) imageConfig.imageSize = mappedSize;
+
     const res = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent",
       {
@@ -39,6 +51,7 @@ export async function POST(request: NextRequest) {
           contents: [{ role: "user", parts }],
           generationConfig: {
             responseModalities: ["TEXT", "IMAGE"],
+            ...(Object.keys(imageConfig).length > 0 ? { imageConfig } : {}),
           },
         }),
       }

@@ -43,6 +43,7 @@ export default function Home() {
   const [isModifying, setIsModifying] = useState(false);
   const [isModifyingApproval, setIsModifyingApproval] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  const [inputValue, setInputValue] = useState("");
 
   const [conversationId, setConversationId] = useState<string>(generateId);
   const [conversationTitle, setConversationTitle] =
@@ -610,7 +611,12 @@ export default function Home() {
             <div className="hidden lg:block" />
             <div>
               <PromptInput
-                onSend={handleSend}
+                value={inputValue}
+                onChange={setInputValue}
+                onSend={(content) => {
+                  handleSend(content);
+                  setInputValue("");
+                }}
                 disabled={isChatLoading || isModifying || isGenerating || !!pendingPrompt}
                 placeholder={inputPlaceholder}
               />

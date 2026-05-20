@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImagePlus, X, SendHorizontal } from "lucide-react";
@@ -9,7 +15,10 @@ import Image from "next/image";
 interface PromptInputProps {
   value: string;
   onChange: (val: string) => void;
-  onSend: (message: string, images?: { data: string; mimeType: string }[]) => void;
+  onSend: (
+    message: string,
+    images?: { data: string; mimeType: string }[],
+  ) => void;
   disabled: boolean;
   placeholder?: string;
 }
@@ -21,11 +30,13 @@ export function PromptInput({
   disabled,
   placeholder = "Describe la imagen que quieres crear...",
 }: PromptInputProps) {
-  const [selectedImages, setSelectedImages] = useState<{
-    data: string;
-    mimeType: string;
-    previewUrl: string;
-  }[]>([]);
+  const [selectedImages, setSelectedImages] = useState<
+    {
+      data: string;
+      mimeType: string;
+      previewUrl: string;
+    }[]
+  >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const wasDisabledRef = useRef(disabled);
@@ -42,10 +53,15 @@ export function PromptInput({
     const trimmed = value.trim();
     if ((!trimmed && selectedImages.length === 0) || disabled) return;
 
-    onSend(trimmed, selectedImages.length > 0 ? selectedImages.map(img => ({
-      data: img.data,
-      mimeType: img.mimeType
-    })) : undefined);
+    onSend(
+      trimmed,
+      selectedImages.length > 0
+        ? selectedImages.map((img) => ({
+            data: img.data,
+            mimeType: img.mimeType,
+          }))
+        : undefined,
+    );
 
     setSelectedImages([]);
     queueMicrotask(() => textareaRef.current?.focus());
@@ -66,12 +82,16 @@ export function PromptInput({
     const filesToProcess = files.slice(0, remainingSlots);
 
     if (files.length > remainingSlots) {
-      alert(`Solo puedes subir hasta 4 imágenes por mensaje. Se añadirán las primeras ${remainingSlots}.`);
+      alert(
+        `Solo puedes subir hasta 4 imágenes por mensaje. Se añadirán las primeras ${remainingSlots}.`,
+      );
     }
 
-    filesToProcess.forEach(file => {
+    filesToProcess.forEach((file) => {
       if (file.size > 5 * 1024 * 1024) {
-        alert(`La imagen ${file.name} es demasiado grande. Por favor usa imágenes de menos de 5MB.`);
+        alert(
+          `La imagen ${file.name} es demasiado grande. Por favor usa imágenes de menos de 5MB.`,
+        );
         return;
       }
 
@@ -79,22 +99,25 @@ export function PromptInput({
       reader.onload = (event) => {
         const result = event.target?.result as string;
         const base64Data = result.split(",")[1];
-        setSelectedImages(prev => [...prev, {
-          data: base64Data,
-          mimeType: file.type,
-          previewUrl: result,
-        }]);
+        setSelectedImages((prev) => [
+          ...prev,
+          {
+            data: base64Data,
+            mimeType: file.type,
+            previewUrl: result,
+          },
+        ]);
       };
       reader.readAsDataURL(file);
     });
-    
+
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   }
 
   function removeImage(index: number) {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   }
 
   return (
@@ -123,7 +146,7 @@ export function PromptInput({
           ))}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="relative flex items-end gap-2">
         <input
           type="file"
@@ -133,7 +156,7 @@ export function PromptInput({
           ref={fileInputRef}
           onChange={handleFileChange}
         />
-        
+
         <div className="relative flex-1 group">
           <Textarea
             ref={textareaRef}
@@ -156,8 +179,8 @@ export function PromptInput({
           </button>
         </div>
 
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={disabled || (!value.trim() && selectedImages.length === 0)}
           size="icon"
           className="size-[52px] shrink-0 rounded-2xl shadow-md transition-all duration-200 hover:shadow-lg active:scale-95"

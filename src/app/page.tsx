@@ -14,7 +14,11 @@ import {
   loadConversation,
   listConversations,
 } from "@/lib/storage";
-import { calculateImageCostCOP, calculateTextCostCOP, formatCOP } from "@/lib/exchange-rate";
+import {
+  calculateImageCostCOP,
+  calculateTextCostCOP,
+  formatCOP,
+} from "@/lib/exchange-rate";
 import { APP_NAME } from "@/lib/app";
 import { ChatContainer } from "@/components/ChatContainer";
 import { PromptInput } from "@/components/PromptInput";
@@ -48,8 +52,7 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("");
 
   const [conversationId, setConversationId] = useState<string>(generateId);
-  const [conversationTitle, setConversationTitle] =
-    useState("Nueva idea");
+  const [conversationTitle, setConversationTitle] = useState("Nueva idea");
   const [conversationCreatedAt, setConversationCreatedAt] = useState(Date.now);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -131,14 +134,17 @@ export default function Home() {
 
       try {
         const referenceImages: { data: string; mimeType: string }[] = [];
-        
+
         // Collect all images from user messages
-        messages.forEach(m => {
+        messages.forEach((m) => {
           if (m.role === "user") {
             if (m.images) {
-              m.images.forEach(img => referenceImages.push(img));
+              m.images.forEach((img) => referenceImages.push(img));
             } else if (m.imageData) {
-              referenceImages.push({ data: m.imageData, mimeType: m.mimeType || "image/png" });
+              referenceImages.push({
+                data: m.imageData,
+                mimeType: m.mimeType || "image/png",
+              });
             }
           }
         });
@@ -146,11 +152,11 @@ export default function Home() {
         const res = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            prompt, 
-            aspectRatio, 
+          body: JSON.stringify({
+            prompt,
+            aspectRatio,
             imageSize,
-            referenceImages 
+            referenceImages,
           }),
         });
 
@@ -207,8 +213,8 @@ export default function Home() {
 
   const sendMessage = useCallback(
     async (content: string, images?: { data: string; mimeType: string }[]) => {
-      const userMsg: Message = { 
-        role: "user", 
+      const userMsg: Message = {
+        role: "user",
         content,
         images: images,
       };
@@ -234,7 +240,10 @@ export default function Home() {
         }
 
         const costCOP = data.usage
-          ? await calculateTextCostCOP(data.usage.promptTokens, data.usage.completionTokens)
+          ? await calculateTextCostCOP(
+              data.usage.promptTokens,
+              data.usage.completionTokens,
+            )
           : undefined;
 
         if (data.type === "ready" && data.detailedPrompt) {
@@ -281,8 +290,8 @@ export default function Home() {
         };
       }
 
-      const userMsg: Message = { 
-        role: "user", 
+      const userMsg: Message = {
+        role: "user",
         content,
         images: images,
       };
@@ -312,7 +321,10 @@ export default function Home() {
         }
 
         const costCOP = data.usage
-          ? await calculateTextCostCOP(data.usage.promptTokens, data.usage.completionTokens)
+          ? await calculateTextCostCOP(
+              data.usage.promptTokens,
+              data.usage.completionTokens,
+            )
           : undefined;
 
         if (data.type === "ready" && data.improvedPrompt) {
@@ -358,12 +370,15 @@ export default function Home() {
         }
 
         // Then add all other images in the conversation as secondary references
-        messages.forEach(m => {
+        messages.forEach((m) => {
           if (m.role === "user") {
             if (m.images) {
-              m.images.forEach(img => referenceImages.push(img));
+              m.images.forEach((img) => referenceImages.push(img));
             } else if (m.imageData) {
-              referenceImages.push({ data: m.imageData, mimeType: m.mimeType || "image/png" });
+              referenceImages.push({
+                data: m.imageData,
+                mimeType: m.mimeType || "image/png",
+              });
             }
           }
         });
@@ -375,7 +390,7 @@ export default function Home() {
             prompt,
             aspectRatio,
             imageSize,
-            referenceImages
+            referenceImages,
           }),
         });
 
@@ -422,7 +437,7 @@ export default function Home() {
         setIsGenerating(false);
       }
     },
-    [aspectRatio, imageSize],
+    [aspectRatio, imageSize, messages],
   );
 
   const handleApprove = useCallback(async () => {
@@ -514,7 +529,10 @@ export default function Home() {
   }
 
   const hasGeneratedImage = messages.some((m) => m.imageData);
-  const conversationTotalCost = messages.reduce((sum, m) => sum + (m.costCOP || 0), 0);
+  const conversationTotalCost = messages.reduce(
+    (sum, m) => sum + (m.costCOP || 0),
+    0,
+  );
 
   const handleSend = useCallback(
     (content: string, images?: { data: string; mimeType: string }[]) => {
@@ -586,14 +604,6 @@ export default function Home() {
                 >
                   ☰
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => setSettingsOpen(true)}
-                  title="Ajustes"
-                >
-                  ⚙
-                </Button>
               </div>
               <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-lg font-semibold tracking-tight">
                 S
@@ -612,10 +622,22 @@ export default function Home() {
             </div>
             <div className="flex min-w-0 items-center justify-end gap-2">
               {conversationTotalCost > 0 && (
-                <Badge variant="outline" className="shrink-0 text-[10px] border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 select-none">
+                <Badge
+                  variant="outline"
+                  className="shrink-0 text-[10px] border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 select-none"
+                >
                   Total: {formatCOP(conversationTotalCost)} COP
                 </Badge>
               )}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setSettingsOpen(true)}
+                title="Ajustes"
+                className="lg:hidden"
+              >
+                ⚙
+              </Button>
             </div>
           </div>
         </div>
@@ -689,7 +711,12 @@ export default function Home() {
                   handleSend(content, images);
                   setInputValue("");
                 }}
-                disabled={isChatLoading || isModifying || isGenerating || !!pendingPrompt}
+                disabled={
+                  isChatLoading ||
+                  isModifying ||
+                  isGenerating ||
+                  !!pendingPrompt
+                }
                 placeholder={inputPlaceholder}
               />
             </div>

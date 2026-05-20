@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFlashLiteModel } from "@/lib/gemini";
+import type { Part } from "@google/generative-ai";
+import type { Message } from "@/lib/types";
 
 const SYSTEM_PROMPT = `Eres un ingeniero de prompts para MODIFICACIÓN de imágenes con Gemini.
 
@@ -25,34 +27,43 @@ FORMATO:
 [MODIFY_PROMPT] <prompt detallado>`;
 
 export async function POST(request: NextRequest) {
-  const { messages, previousPrompt, aspectRatio = "1:1" } = await request.json();
+  const {
+    messages,
+    previousPrompt,
+    aspectRatio = "1:1",
+  } = await request.json();
 
   const lastMessage = messages[messages.length - 1];
 
   if (!lastMessage || lastMessage.role !== "user") {
-    return NextResponse.json({ error: "Se esperaba un mensaje de usuario" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Se esperaba un mensaje de usuario" },
+      { status: 400 },
+    );
   }
 
-  const conversationText = messages
+  const conversationText = (messages as Message[])
     .slice(0, -1)
-    .map((m: any) => `${m.role === "user" ? "Usuario" : "Asistente"}: ${m.content}`)
+    .map((m) => `${m.role === "user" ? "Usuario" : "Asistente"}: ${m.content}`)
     .join("\n");
 
-  const systemPrompt = SYSTEM_PROMPT
-    .replace(/\{conversationText\}/g, conversationText || "No hay conversación previa")
+  const systemPrompt = SYSTEM_PROMPT.replace(
+    /\{conversationText\}/g,
+    conversationText || "No hay conversación previa",
+  )
     .replace(/\{previousPrompt\}/g, previousPrompt || "No hay prompt anterior")
     .replace(/\{aspectRatio\}/g, aspectRatio);
 
   const model = getFlashLiteModel();
 
   try {
-    const parts: any[] = [
+    const parts: Part[] = [
       { text: systemPrompt },
-      { text: `Solicitud de modificación: ${lastMessage.content}` }
+      { text: `Solicitud de modificación: ${lastMessage.content}` },
     ];
 
     if (lastMessage.images && lastMessage.images.length > 0) {
-      lastMessage.images.forEach((img: any) => {
+      lastMessage.images.forEach((img) => {
         parts.push({
           inlineData: {
             mimeType: img.mimeType,
@@ -65,10 +76,12 @@ export async function POST(request: NextRequest) {
     const result = await model.generateContent(parts);
     const text = result.response.text().trim();
     const usageMetadata = result.response.usageMetadata;
-    const usage = usageMetadata ? {
-      promptTokens: usageMetadata.promptTokenCount,
-      completionTokens: usageMetadata.candidatesTokenCount,
-    } : undefined;
+    const usage = usageMetadata
+      ? {
+          promptTokens: usageMetadata.promptTokenCount,
+          completionTokens: usageMetadata.candidatesTokenCount,
+        }
+      : undefined;
 
     const modifyIdx = text.indexOf("[MODIFY_PROMPT]");
     if (modifyIdx !== -1) {
@@ -77,7 +90,8 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         type: "ready",
-        content: content || "He mejorado tu solicitud de modificación. ¿Aprobamos?",
+        content:
+          content || "He mejorado tu solicitud de modificación. ¿Aprobamos?",
         improvedPrompt,
         usage,
       });
@@ -93,7 +107,7 @@ export async function POST(request: NextRequest) {
     console.error("Modify API error:", error);
     return NextResponse.json(
       { error: "Error al procesar la modificación" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

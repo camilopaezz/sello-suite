@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFlashLiteModel } from "@/lib/gemini";
-import type { Content } from "@google/generative-ai";
+import type { Content, Part } from "@google/generative-ai";
+import type { Message } from "@/lib/types";
 
 const SYSTEM_PROMPT = `Eres un ingeniero creativo de prompts para Sello Studio, una aplicación de generación de imágenes. Tu función: ayudar a los usuarios a convertir sus ideas o imágenes en prompts detallados y listos para generar.
 
@@ -29,10 +30,10 @@ export async function POST(request: NextRequest) {
 
   const model = getFlashLiteModel();
 
-  const history: Content[] = messages.slice(0, -1).map((m: any) => {
-    const parts: any[] = [{ text: m.content || "" }];
+  const history: Content[] = (messages as Message[]).slice(0, -1).map((m) => {
+    const parts: Part[] = [{ text: m.content || "" }];
     if (m.images && m.images.length > 0) {
-      m.images.forEach((img: any) => {
+      m.images.forEach((img) => {
         parts.push({
           inlineData: {
             mimeType: img.mimeType,
@@ -54,10 +55,10 @@ export async function POST(request: NextRequest) {
     };
   });
 
-  const lastMessage = messages[messages.length - 1];
-  const lastParts: any[] = [{ text: lastMessage.content || "" }];
+  const lastMessage = (messages as Message[])[messages.length - 1];
+  const lastParts: Part[] = [{ text: lastMessage.content || "" }];
   if (lastMessage.images && lastMessage.images.length > 0) {
-    lastMessage.images.forEach((img: any) => {
+    lastMessage.images.forEach((img) => {
       lastParts.push({
         inlineData: {
           mimeType: img.mimeType,
@@ -83,10 +84,12 @@ export async function POST(request: NextRequest) {
     const result = await chat.sendMessage(lastParts);
     const text = result.response.text().trim();
     const usageMetadata = result.response.usageMetadata;
-    const usage = usageMetadata ? {
-      promptTokens: usageMetadata.promptTokenCount,
-      completionTokens: usageMetadata.candidatesTokenCount,
-    } : undefined;
+    const usage = usageMetadata
+      ? {
+          promptTokens: usageMetadata.promptTokenCount,
+          completionTokens: usageMetadata.candidatesTokenCount,
+        }
+      : undefined;
 
     const readyIdx = text.indexOf("[READY]");
     if (readyIdx !== -1) {
@@ -96,12 +99,16 @@ export async function POST(request: NextRequest) {
 
       const aspectMatch = detailedPrompt.match(/\(Relación de aspecto \S+\)/);
       if (aspectMatch && aspectMatch.index !== undefined) {
-        detailedPrompt = detailedPrompt.slice(0, aspectMatch.index + aspectMatch[0].length).trim();
+        detailedPrompt = detailedPrompt
+          .slice(0, aspectMatch.index + aspectMatch[0].length)
+          .trim();
       }
 
       return NextResponse.json({
         type: "ready",
-        content: content || "Ya tengo suficiente detalle. ¿Aprobamos este prompt para generar la imagen?",
+        content:
+          content ||
+          "Ya tengo suficiente detalle. ¿Aprobamos este prompt para generar la imagen?",
         detailedPrompt,
         usage,
       });
@@ -126,7 +133,7 @@ export async function POST(request: NextRequest) {
     console.error("Chat API error:", error);
     return NextResponse.json(
       { error: "Error al procesar el mensaje" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

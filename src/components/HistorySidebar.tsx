@@ -37,7 +37,7 @@ function getDateGroup(ts: number): string {
   const diffDays = Math.floor(
     (Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) -
       Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())) /
-      86400000
+      86400000,
   );
   if (diffDays === 0) return "Hoy";
   if (diffDays === 1) return "Ayer";
@@ -201,9 +201,7 @@ function SidebarContent({
                       role="button"
                       tabIndex={0}
                       className={`group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors ${
-                        conv.id === activeId
-                          ? "bg-muted"
-                          : "hover:bg-muted/60"
+                        conv.id === activeId ? "bg-muted" : "hover:bg-muted/60"
                       }`}
                     >
                       <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-muted/50">
@@ -216,7 +214,9 @@ function SidebarContent({
                             unoptimized
                           />
                         ) : (
-                          <span className="text-xs font-semibold text-muted-foreground">S</span>
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            S
+                          </span>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -272,7 +272,11 @@ export function HistorySidebar({
 }: HistorySidebarProps) {
   return (
     <Sheet open={open} onOpenChange={(value) => !value && onClose()}>
-      <SheetContent side="left" showCloseButton={false} className="w-80 gap-0 p-0">
+      <SheetContent
+        side="left"
+        showCloseButton={false}
+        className="w-80 gap-0 p-0"
+      >
         <SidebarContent
           conversations={conversations}
           activeId={activeId}
@@ -299,7 +303,7 @@ export function HistorySidebarPanel({
     <div
       className={cn(
         "flex h-full flex-col overflow-hidden rounded-xl border border-border/70 bg-card/95 shadow-lg",
-        className
+        className,
       )}
     >
       <SidebarContent

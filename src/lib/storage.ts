@@ -30,7 +30,7 @@ export async function saveConversation(conv: Conversation): Promise<void> {
 }
 
 export async function loadConversation(
-  id: string
+  id: string,
 ): Promise<Conversation | null> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -62,7 +62,7 @@ export async function getAllConversations(): Promise<Conversation[]> {
 }
 
 export async function importConversations(
-  conversations: Conversation[]
+  conversations: Conversation[],
 ): Promise<number> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -103,7 +103,10 @@ export async function listConversations(): Promise<ConversationMeta[]> {
         .filter((c) => c.messages && c.messages.length > 0)
         .map((c) => {
           const imgMsg = c.messages.find((m) => m.imageData);
-          const totalCost = c.messages.reduce((sum, m) => sum + (m.costCOP || 0), 0);
+          const totalCost = c.messages.reduce(
+            (sum, m) => sum + (m.costCOP || 0),
+            0,
+          );
           return {
             id: c.id,
             title: c.title || "New Chat",

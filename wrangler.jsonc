@@ -3,29 +3,27 @@
   "main": ".open-next/worker.js",
   "name": "sello-suite",
   "compatibility_date": "2026-05-15",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "sello-suite"
-    }
+      "service": "sello-suite",
+    },
   ],
   "r2_buckets": [
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "sello-suite-opennext-cache"
-    }
+      "bucket_name": "sello-suite-opennext-cache",
+    },
   ],
   "images": {
-    "binding": "IMAGES"
+    "binding": "IMAGES",
   },
   "observability": {
-    "enabled": true
-  }
+    "enabled": true,
+  },
 }

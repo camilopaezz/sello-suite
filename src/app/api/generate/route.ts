@@ -1,25 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const { prompt, referenceImages, aspectRatio, imageSize } = await request.json();
+  const { prompt, referenceImages, aspectRatio, imageSize } =
+    await request.json();
 
   if (!prompt || typeof prompt !== "string") {
-    return NextResponse.json({ error: "El prompt es obligatorio" }, { status: 400 });
+    return NextResponse.json(
+      { error: "El prompt es obligatorio" },
+      { status: 400 },
+    );
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
       { error: "GEMINI_API_KEY no está configurada" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
   try {
     const parts: Record<string, unknown>[] = [];
-    
+
     if (referenceImages && Array.isArray(referenceImages)) {
-      referenceImages.forEach((img: any) => {
+      referenceImages.forEach((img: { data?: string; mimeType?: string }) => {
         if (img.data) {
           parts.push({
             inlineData: {
@@ -39,7 +43,8 @@ export async function POST(request: NextRequest) {
       2048: "2K",
       4096: "4K",
     };
-    const mappedSize = typeof imageSize === "number" ? sizeMap[imageSize] : undefined;
+    const mappedSize =
+      typeof imageSize === "number" ? sizeMap[imageSize] : undefined;
 
     const imageConfig: Record<string, unknown> = {};
     if (aspectRatio) imageConfig.aspectRatio = aspectRatio;
@@ -60,7 +65,7 @@ export async function POST(request: NextRequest) {
             ...(Object.keys(imageConfig).length > 0 ? { imageConfig } : {}),
           },
         }),
-      }
+      },
     );
 
     if (!res.ok) {
@@ -68,7 +73,7 @@ export async function POST(request: NextRequest) {
       console.error("Gemini API error:", res.status, errBody);
       return NextResponse.json(
         { error: `Gemini API returned ${res.status}` },
-        { status: 502 }
+        { status: 502 },
       );
     }
 
@@ -95,8 +100,11 @@ export async function POST(request: NextRequest) {
         .join(" ");
 
       return NextResponse.json(
-        { error: "No hay datos de imagen en la respuesta", responseText: text ?? "" },
-        { status: 500 }
+        {
+          error: "No hay datos de imagen en la respuesta",
+          responseText: text ?? "",
+        },
+        { status: 500 },
       );
     }
 
@@ -105,7 +113,7 @@ export async function POST(request: NextRequest) {
     console.error("Generate API error:", error);
     return NextResponse.json(
       { error: "Error al generar la imagen" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const userMessages = (messages as Message[]).filter(
-      (m) => m.role === "user"
+      (m) => m.role === "user",
     );
     const summary = userMessages
       .slice(0, 3)
@@ -23,15 +23,17 @@ export async function POST(request: NextRequest) {
     const model = getFlashLiteModel();
 
     const result = await model.generateContent(
-      `Genera un título descriptivo corto (máximo 6 palabras, sin comillas, sin markdown) para esta idea de generación de imágenes. El usuario quiere crear: ${truncated}`
+      `Genera un título descriptivo corto (máximo 6 palabras, sin comillas, sin markdown) para esta idea de generación de imágenes. El usuario quiere crear: ${truncated}`,
     );
 
     const title = result.response.text().trim();
     const usageMetadata = result.response.usageMetadata;
-    const usage = usageMetadata ? {
-      promptTokens: usageMetadata.promptTokenCount,
-      completionTokens: usageMetadata.candidatesTokenCount,
-    } : undefined;
+    const usage = usageMetadata
+      ? {
+          promptTokens: usageMetadata.promptTokenCount,
+          completionTokens: usageMetadata.candidatesTokenCount,
+        }
+      : undefined;
 
     return NextResponse.json({ title, usage });
   } catch {

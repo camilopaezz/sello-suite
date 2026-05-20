@@ -135,10 +135,20 @@ export function ChatMessage({
             </details>
           </CardContent>
           <CardFooter className="flex flex-wrap justify-end gap-1.5 sm:gap-2">
-            <Button variant="outline" size="sm" onClick={handleDownload} title="Descargar imagen">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownload}
+              title="Descargar imagen"
+            >
               Descargar
             </Button>
-            <Button variant="outline" size="sm" onClick={handleCopy} title="Copiar prompt al portapapeles">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+              title="Copiar prompt al portapapeles"
+            >
               {copied ? "Copiado" : "Copiar"}
             </Button>
             <Button
@@ -156,14 +166,21 @@ export function ChatMessage({
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div className={`flex max-w-[85%] flex-col gap-2 ${isUser ? "items-end" : "items-start"}`}>
+      <div
+        className={`flex max-w-[85%] flex-col gap-2 ${isUser ? "items-end" : "items-start"}`}
+      >
         {isUser && (message.images || message.imageData) && (
-          <div className={`grid gap-2 ${
-            (message.images?.length || 1) > 1 ? "grid-cols-2" : "grid-cols-1"
-          }`}>
+          <div
+            className={`grid gap-2 ${
+              (message.images?.length || 1) > 1 ? "grid-cols-2" : "grid-cols-1"
+            }`}
+          >
             {message.images ? (
               message.images.map((img, idx) => (
-                <div key={idx} className="relative group overflow-hidden rounded-2xl border border-border/50 bg-muted/20 shadow-sm transition-all hover:shadow-md">
+                <div
+                  key={idx}
+                  className="relative group overflow-hidden rounded-2xl border border-border/50 bg-muted/20 shadow-sm transition-all hover:shadow-md"
+                >
                   <Image
                     src={`data:${img.mimeType || "image/png"};base64,${img.data}`}
                     alt={`User uploaded image ${idx + 1}`}
@@ -188,7 +205,7 @@ export function ChatMessage({
             )}
           </div>
         )}
-        
+
         <Card
           className={`rounded-2xl border border-border/70 py-0 shadow-sm ${
             isUser

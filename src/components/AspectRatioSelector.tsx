@@ -19,7 +19,10 @@ interface AspectRatioSelectorProps {
   onChange: (value: AspectRatio) => void;
 }
 
-export function AspectRatioSelector({ value, onChange }: AspectRatioSelectorProps) {
+export function AspectRatioSelector({
+  value,
+  onChange,
+}: AspectRatioSelectorProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-xs font-medium text-muted-foreground">

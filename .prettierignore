@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+build
+.open-next
+coverage
+package-lock.json
+pnpm-lock.yaml
+cloudflare-env.d.ts
+next-env.d.ts

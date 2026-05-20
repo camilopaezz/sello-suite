@@ -46,30 +46,25 @@ export function ImportDialog({
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string) as ExportData;
-        if (
-          !data.version ||
-          !Array.isArray(data.conversations)
-        ) {
+        if (!data.version || !Array.isArray(data.conversations)) {
           setError("El archivo no tiene el formato esperado.");
           return;
         }
         const convs = data.conversations;
-        const sorted = [...convs].sort(
-          (a, b) => a.createdAt - b.createdAt
-        );
+        const sorted = [...convs].sort((a, b) => a.createdAt - b.createdAt);
         setPreview({
           count: convs.length,
           firstDate: sorted[0]
             ? new Date(sorted[0].createdAt).toLocaleDateString()
             : undefined,
           lastDate: sorted[sorted.length - 1]
-            ? new Date(
-                sorted[sorted.length - 1].createdAt
-              ).toLocaleDateString()
+            ? new Date(sorted[sorted.length - 1].createdAt).toLocaleDateString()
             : undefined,
         });
       } catch {
-        setError("No se pudo leer el archivo. Asegúrate de que sea un JSON válido.");
+        setError(
+          "No se pudo leer el archivo. Asegúrate de que sea un JSON válido.",
+        );
       }
     };
     reader.readAsText(f);
@@ -134,9 +129,7 @@ export function ImportDialog({
               </div>
             )}
 
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </CardContent>
           <CardFooter className="justify-end gap-2">
             <Button

@@ -1,7 +1,9 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+
 <!-- END:nextjs-agent-rules -->
 
 # Sello Studio (`sello-suite`)
@@ -18,6 +20,9 @@ This is an AI-powered image generation application built with Next.js 16 and dep
 ## Developer Commands
 
 - `npm run dev` - Standard Next.js local development server.
+- `npm run lint` / `npm run lint:fix` - ESLint check or auto-fix.
+- `npm run format` / `npm run format:check` - Prettier write or check.
+- Pre-commit (Husky + lint-staged) runs ESLint and Prettier on staged files automatically.
 - `npm run preview` - Builds OpenNext artifacts and previews the Cloudflare Worker locally (crucial for verifying edge compatibility before deploying).
 - `npm run deploy` - Deploys the application to Cloudflare.
 - `npm run cf-typegen` - Run this whenever you modify bindings in `wrangler.jsonc` to regenerate `cloudflare-env.d.ts`.

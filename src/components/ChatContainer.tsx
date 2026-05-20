@@ -61,7 +61,9 @@ export function ChatContainer({
         {messages.map((msg, i) => {
           const isLast = i === messages.length - 1;
           const showApproval = !!(
-            isLast && pendingPrompt && msg.detailedPrompt === pendingPrompt
+            isLast &&
+            pendingPrompt &&
+            msg.detailedPrompt === pendingPrompt
           );
           return (
             <ChatMessage

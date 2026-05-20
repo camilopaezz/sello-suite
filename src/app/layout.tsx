@@ -17,8 +17,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Sello Studio",
-  description:
-    "Genera imágenes con IA — describe tu idea, refina y crea.",
+  description: "Genera imágenes con IA — describe tu idea, refina y crea.",
 };
 
 export default function RootLayout({

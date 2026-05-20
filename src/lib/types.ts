@@ -54,8 +54,15 @@ export interface GenerateResponse {
 }
 
 export type AspectRatio =
-  | "1:1" | "3:4" | "4:3" | "9:16" | "16:9"
-  | "1:4" | "4:1" | "1:8" | "8:1";
+  | "1:1"
+  | "3:4"
+  | "4:3"
+  | "9:16"
+  | "16:9"
+  | "1:4"
+  | "4:1"
+  | "1:8"
+  | "8:1";
 
 export type ImageSize = 512 | 1024 | 2048 | 4096;
 
@@ -93,7 +100,7 @@ export interface ExportData {
 
 export function computeDimensions(
   aspectRatio: AspectRatio,
-  imageSize: ImageSize
+  imageSize: ImageSize,
 ): string {
   const [w, h] = aspectRatio.split(":").map(Number);
   const scale = Math.sqrt((imageSize * imageSize) / (w * h));

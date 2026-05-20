@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { Message } from "@/lib/types";
+import { APP_NAME } from "@/lib/app";
 import { ChatMessage } from "./ChatMessage";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,14 +39,14 @@ export function ChatContainer({
       <div className="flex flex-1 items-center justify-center p-6">
         <Card className="w-full max-w-xl border border-border/60 bg-card/70 py-0 shadow-sm">
           <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted text-3xl">
-              🍌
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted text-2xl font-semibold tracking-tight">
+              S
             </div>
             <div className="space-y-1">
-              <p className="text-base font-semibold">Nano Banana Studio</p>
+              <p className="text-base font-semibold">{APP_NAME}</p>
               <p className="text-sm text-muted-foreground">
                 Describe la imagen que quieres crear. Haré algunas preguntas
-                para refinar tu idea y la generaré con Gemini.
+                para refinar tu idea y generarla.
               </p>
             </div>
           </div>

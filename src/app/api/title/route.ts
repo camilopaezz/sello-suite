@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   const { messages } = await request.json();
 
   if (!messages || messages.length === 0) {
-    return NextResponse.json({ title: "Nueva conversación" });
+    return NextResponse.json({ title: "Nueva idea" });
   }
 
   try {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const model = getFlashLiteModel();
 
     const result = await model.generateContent(
-      `Genera un título descriptivo corto (máximo 6 palabras, sin comillas, sin markdown) para esta conversación de generación de imágenes. El usuario quiere crear: ${truncated}`
+      `Genera un título descriptivo corto (máximo 6 palabras, sin comillas, sin markdown) para esta idea de generación de imágenes. El usuario quiere crear: ${truncated}`
     );
 
     const title = result.response.text().trim();

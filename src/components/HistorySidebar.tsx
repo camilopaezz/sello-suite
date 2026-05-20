@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { ConversationMeta } from "@/lib/types";
+import { APP_NAME } from "@/lib/app";
 import {
   deleteConversation,
   getAllConversations,
@@ -111,7 +112,7 @@ function SidebarContent({
     const data: ExportData = {
       version: 1,
       exportedAt: Date.now(),
-      app: "Nano Banana Studio",
+      app: APP_NAME,
       conversations: all,
     };
     exportToJsonFile(data);
@@ -121,15 +122,15 @@ function SidebarContent({
     <div className={cn("flex h-full flex-col", className)}>
       <div className="flex items-start justify-between gap-2 p-4 pb-2">
         <div className="flex flex-col gap-0.5">
-          <h2 className="text-sm font-semibold">Conversaciones</h2>
-          <p className="text-xs text-muted-foreground">Tu historial reciente</p>
+          <h2 className="text-sm font-semibold">Ideas</h2>
+          <p className="text-xs text-muted-foreground">Tus ideas recientes</p>
         </div>
         <div className="flex shrink-0 gap-1">
           <Button
             variant="ghost"
             size="icon-xs"
             onClick={handleExport}
-            title="Exportar historial"
+            title="Exportar ideas"
           >
             ↓
           </Button>
@@ -137,7 +138,7 @@ function SidebarContent({
             variant="ghost"
             size="icon-xs"
             onClick={() => setImportOpen(true)}
-            title="Importar historial"
+            title="Importar ideas"
           >
             ↑
           </Button>
@@ -169,7 +170,7 @@ function SidebarContent({
           }}
           className="w-full"
         >
-          + Nueva conversación
+          + Nueva idea
         </Button>
       </div>
 
@@ -215,7 +216,7 @@ function SidebarContent({
                             unoptimized
                           />
                         ) : (
-                          <span className="text-sm">🍌</span>
+                          <span className="text-xs font-semibold text-muted-foreground">S</span>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -251,7 +252,7 @@ function SidebarContent({
 
           {conversations.length === 0 && (
             <p className="pt-8 text-center text-xs text-muted-foreground">
-              Sin conversaciones aún
+              Sin ideas aún
             </p>
           )}
         </div>

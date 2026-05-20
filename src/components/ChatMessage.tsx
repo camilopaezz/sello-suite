@@ -92,7 +92,7 @@ export function ChatMessage({
     function handleDownload() {
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = `nano-banana-${Date.now()}.${(message.mimeType || "png").split("/")[1]}`;
+      a.download = `sello-studio-${Date.now()}.${(message.mimeType || "png").split("/")[1]}`;
       a.click();
     }
 

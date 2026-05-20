@@ -16,9 +16,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nano Banana Studio",
+  title: "Sello Studio",
   description:
-    "Genera imágenes con Google Gemini — describe tu idea, refina con IA y crea.",
+    "Genera imágenes con IA — describe tu idea, refina y crea.",
 };
 
 export default function RootLayout({

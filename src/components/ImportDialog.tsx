@@ -91,7 +91,7 @@ export function ImportDialog({
       setFile(null);
       setPreview(null);
     } catch {
-      setError("Error al importar las conversaciones.");
+      setError("Error al importar las ideas.");
     } finally {
       setImporting(false);
     }
@@ -109,7 +109,7 @@ export function ImportDialog({
       <Card className="mx-4 w-full max-w-md">
         <form onSubmit={handleImport}>
           <CardHeader>
-            <CardTitle className="text-sm">Importar conversaciones</CardTitle>
+            <CardTitle className="text-sm">Importar ideas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <input
@@ -122,14 +122,14 @@ export function ImportDialog({
 
             {preview && (
               <div className="rounded-lg border border-border/70 bg-muted/50 p-3 text-sm">
-                <p className="font-medium">{preview.count} conversación(es)</p>
+                <p className="font-medium">{preview.count} idea(s)</p>
                 {preview.firstDate && (
                   <p className="text-xs text-muted-foreground mt-1">
                     {preview.firstDate} — {preview.lastDate}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground/70 mt-1">
-                  Las conversaciones con IDs existentes serán sobrescritas.
+                  Las ideas con IDs existentes serán sobrescritas.
                 </p>
               </div>
             )}

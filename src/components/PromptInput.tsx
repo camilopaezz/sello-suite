@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type FormEvent, type KeyboardEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImagePlus, X, SendHorizontal } from "lucide-react";
@@ -27,6 +27,15 @@ export function PromptInput({
     previewUrl: string;
   }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const wasDisabledRef = useRef(disabled);
+
+  useEffect(() => {
+    if (wasDisabledRef.current && !disabled) {
+      textareaRef.current?.focus();
+    }
+    wasDisabledRef.current = disabled;
+  }, [disabled]);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -39,6 +48,7 @@ export function PromptInput({
     })) : undefined);
 
     setSelectedImages([]);
+    queueMicrotask(() => textareaRef.current?.focus());
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
@@ -126,6 +136,7 @@ export function PromptInput({
         
         <div className="relative flex-1 group">
           <Textarea
+            ref={textareaRef}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}

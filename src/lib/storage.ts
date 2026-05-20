@@ -85,7 +85,7 @@ export function exportToJsonFile(data: ExportData): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `nano-banana-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `sello-studio-${new Date().toISOString().slice(0, 10)}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

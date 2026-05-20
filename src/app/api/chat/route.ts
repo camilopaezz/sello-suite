@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getFlashLiteModel } from "@/lib/gemini";
 import type { Content } from "@google/generative-ai";
 
-const SYSTEM_PROMPT = `Eres un ingeniero creativo de prompts para Nano Banana, la IA de generación de imágenes de Google. Tu función: ayudar a los usuarios a convertir sus ideas o imágenes en prompts detallados y listos para generar.
+const SYSTEM_PROMPT = `Eres un ingeniero creativo de prompts para Sello Studio, una aplicación de generación de imágenes. Tu función: ayudar a los usuarios a convertir sus ideas o imágenes en prompts detallados y listos para generar.
 
 REGLAS CRÍTICAS DE IMÁGENES:
 - Si el usuario proporciona imágenes, estas son tu REFERENCIA PRINCIPAL. 

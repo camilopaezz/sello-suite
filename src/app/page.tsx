@@ -15,6 +15,7 @@ import {
   listConversations,
 } from "@/lib/storage";
 import { calculateImageCostCOP, calculateTextCostCOP, formatCOP } from "@/lib/exchange-rate";
+import { APP_NAME } from "@/lib/app";
 import { ChatContainer } from "@/components/ChatContainer";
 import { PromptInput } from "@/components/PromptInput";
 import { AspectRatioSelector } from "@/components/AspectRatioSelector";
@@ -48,7 +49,7 @@ export default function Home() {
 
   const [conversationId, setConversationId] = useState<string>(generateId);
   const [conversationTitle, setConversationTitle] =
-    useState("Nueva conversación");
+    useState("Nueva idea");
   const [conversationCreatedAt, setConversationCreatedAt] = useState(Date.now);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -503,7 +504,7 @@ export default function Home() {
 
     const now = Date.now();
     setConversationId(generateId());
-    setConversationTitle("Nueva conversación");
+    setConversationTitle("Nueva idea");
     setConversationCreatedAt(now);
     setMessages([]);
     setAspectRatio("1:1");
@@ -581,7 +582,7 @@ export default function Home() {
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => setSidebarOpen(true)}
-                  title="Historial"
+                  title="Ideas"
                 >
                   ☰
                 </Button>
@@ -594,8 +595,8 @@ export default function Home() {
                   ⚙
                 </Button>
               </div>
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-lg">
-                🍌
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-lg font-semibold tracking-tight">
+                S
               </div>
               <p className="hidden truncate text-xs text-muted-foreground lg:block">
                 Estudio de prompts y generación
@@ -603,7 +604,7 @@ export default function Home() {
             </div>
             <div className="min-w-0 text-center">
               <h1 className="truncate text-sm font-semibold tracking-tight">
-                {conversationTitle || "Nano Banana Studio"}
+                {conversationTitle || APP_NAME}
               </h1>
               <p className="text-xs text-muted-foreground lg:hidden">
                 Estudio de prompts y generación
@@ -615,9 +616,6 @@ export default function Home() {
                   Total: {formatCOP(conversationTotalCost)} COP
                 </Badge>
               )}
-              <Badge variant="secondary" className="shrink-0 text-[10px] ">
-                Gemini 3.1 Flash
-              </Badge>
             </div>
           </div>
         </div>

@@ -5,7 +5,11 @@ export interface Message {
   content: string;
   imageData?: string;
   mimeType?: string;
+  images?: { data: string; mimeType: string }[];
   detailedPrompt?: string;
+  aspectRatio?: AspectRatio;
+  imageSize?: ImageSize;
+  costCOP?: number;
 }
 
 export interface Conversation {
@@ -24,6 +28,7 @@ export interface ConversationMeta {
   createdAt: number;
   updatedAt: number;
   thumbnail?: string;
+  totalCost?: number;
 }
 
 export interface ChatRequest {

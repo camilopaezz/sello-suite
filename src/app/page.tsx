@@ -14,6 +14,7 @@ import {
   loadConversation,
   listConversations,
 } from "@/lib/storage";
+import { calculateImageCostCOP, calculateTextCostCOP, formatCOP } from "@/lib/exchange-rate";
 import { ChatContainer } from "@/components/ChatContainer";
 import { PromptInput } from "@/components/PromptInput";
 import { AspectRatioSelector } from "@/components/AspectRatioSelector";
@@ -128,10 +129,28 @@ export default function Home() {
       setIsGenerating(true);
 
       try {
+        const referenceImages: { data: string; mimeType: string }[] = [];
+        
+        // Collect all images from user messages
+        messages.forEach(m => {
+          if (m.role === "user") {
+            if (m.images) {
+              m.images.forEach(img => referenceImages.push(img));
+            } else if (m.imageData) {
+              referenceImages.push({ data: m.imageData, mimeType: m.mimeType || "image/png" });
+            }
+          }
+        });
+
         const res = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, aspectRatio, imageSize }),
+          body: JSON.stringify({ 
+            prompt, 
+            aspectRatio, 
+            imageSize,
+            referenceImages 
+          }),
         });
 
         const data = await res.json();
@@ -147,6 +166,8 @@ export default function Home() {
           return;
         }
 
+        const costCOP = await calculateImageCostCOP(imageSize);
+
         setMessages((prev) => {
           const updated = [
             ...prev,
@@ -156,6 +177,9 @@ export default function Home() {
               imageData: data.image,
               mimeType: data.mimeType,
               detailedPrompt: prompt,
+              aspectRatio,
+              imageSize,
+              costCOP,
             },
           ];
           return updated;
@@ -181,8 +205,13 @@ export default function Home() {
   );
 
   const sendMessage = useCallback(
-    async (content: string) => {
-      const newMessages: Message[] = [...messages, { role: "user", content }];
+    async (content: string, images?: { data: string; mimeType: string }[]) => {
+      const userMsg: Message = { 
+        role: "user", 
+        content,
+        images: images,
+      };
+      const newMessages: Message[] = [...messages, userMsg];
       setMessages(newMessages);
       setIsChatLoading(true);
 
@@ -203,6 +232,10 @@ export default function Home() {
           return;
         }
 
+        const costCOP = data.usage
+          ? await calculateTextCostCOP(data.usage.promptTokens, data.usage.completionTokens)
+          : undefined;
+
         if (data.type === "ready" && data.detailedPrompt) {
           setMessages((prev) => [
             ...prev,
@@ -210,13 +243,14 @@ export default function Home() {
               role: "assistant",
               content: data.content,
               detailedPrompt: data.detailedPrompt,
+              costCOP,
             },
           ]);
           setPendingPrompt(data.detailedPrompt);
         } else {
           setMessages((prev) => [
             ...prev,
-            { role: "assistant", content: data.content },
+            { role: "assistant", content: data.content, costCOP },
           ]);
         }
       } catch {
@@ -235,16 +269,23 @@ export default function Home() {
   );
 
   const sendModification = useCallback(
-    async (content: string) => {
+    async (content: string, images?: { data: string; mimeType: string }[]) => {
       const lastImage = messages.findLast((m) => m.imageData);
-      if (!lastImage) return;
+      if (!lastImage && (!images || images.length === 0)) return;
 
-      lastImageRef.current = {
-        data: lastImage.imageData!,
-        mimeType: lastImage.mimeType || "image/png",
+      if (lastImage && (!images || images.length === 0)) {
+        lastImageRef.current = {
+          data: lastImage.imageData!,
+          mimeType: lastImage.mimeType || "image/png",
+        };
+      }
+
+      const userMsg: Message = { 
+        role: "user", 
+        content,
+        images: images,
       };
-
-      const newMessages: Message[] = [...messages, { role: "user", content }];
+      const newMessages: Message[] = [...messages, userMsg];
       setMessages(newMessages);
       setIsModifying(true);
 
@@ -269,6 +310,10 @@ export default function Home() {
           return;
         }
 
+        const costCOP = data.usage
+          ? await calculateTextCostCOP(data.usage.promptTokens, data.usage.completionTokens)
+          : undefined;
+
         if (data.type === "ready" && data.improvedPrompt) {
           setMessages((prev) => [
             ...prev,
@@ -276,6 +321,7 @@ export default function Home() {
               role: "assistant",
               content: data.content,
               detailedPrompt: data.improvedPrompt,
+              costCOP,
             },
           ]);
           setPendingPrompt(data.improvedPrompt);
@@ -303,6 +349,24 @@ export default function Home() {
       const prev = lastImageRef.current;
 
       try {
+        const referenceImages: { data: string; mimeType: string }[] = [];
+
+        // First, add the image being modified (crucial for consistency)
+        if (prev) {
+          referenceImages.push(prev);
+        }
+
+        // Then add all other images in the conversation as secondary references
+        messages.forEach(m => {
+          if (m.role === "user") {
+            if (m.images) {
+              m.images.forEach(img => referenceImages.push(img));
+            } else if (m.imageData) {
+              referenceImages.push({ data: m.imageData, mimeType: m.mimeType || "image/png" });
+            }
+          }
+        });
+
         const res = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -310,8 +374,7 @@ export default function Home() {
             prompt,
             aspectRatio,
             imageSize,
-            previousImage: prev?.data,
-            previousMimeType: prev?.mimeType,
+            referenceImages
           }),
         });
 
@@ -328,6 +391,8 @@ export default function Home() {
           return;
         }
 
+        const costCOP = await calculateImageCostCOP(imageSize);
+
         setMessages((prev) => {
           const updated = [
             ...prev,
@@ -337,6 +402,9 @@ export default function Home() {
               imageData: data.image,
               mimeType: data.mimeType,
               detailedPrompt: prompt,
+              aspectRatio,
+              imageSize,
+              costCOP,
             },
           ];
           return updated;
@@ -445,13 +513,14 @@ export default function Home() {
   }
 
   const hasGeneratedImage = messages.some((m) => m.imageData);
+  const conversationTotalCost = messages.reduce((sum, m) => sum + (m.costCOP || 0), 0);
 
   const handleSend = useCallback(
-    (content: string) => {
+    (content: string, images?: { data: string; mimeType: string }[]) => {
       if (hasGeneratedImage) {
-        sendModification(content);
+        sendModification(content, images);
       } else {
-        sendMessage(content);
+        sendMessage(content, images);
       }
     },
     [hasGeneratedImage, sendModification, sendMessage],
@@ -540,7 +609,12 @@ export default function Home() {
                 Estudio de prompts y generación
               </p>
             </div>
-            <div className="flex min-w-0 items-center justify-end">
+            <div className="flex min-w-0 items-center justify-end gap-2">
+              {conversationTotalCost > 0 && (
+                <Badge variant="outline" className="shrink-0 text-[10px] border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 select-none">
+                  Total: {formatCOP(conversationTotalCost)} COP
+                </Badge>
+              )}
               <Badge variant="secondary" className="shrink-0 text-[10px] ">
                 Gemini 3.1 Flash
               </Badge>
@@ -613,8 +687,8 @@ export default function Home() {
               <PromptInput
                 value={inputValue}
                 onChange={setInputValue}
-                onSend={(content) => {
-                  handleSend(content);
+                onSend={(content, images) => {
+                  handleSend(content, images);
                   setInputValue("");
                 }}
                 disabled={isChatLoading || isModifying || isGenerating || !!pendingPrompt}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const { prompt, previousImage, previousMimeType, aspectRatio, imageSize } = await request.json();
+  const { prompt, referenceImages, aspectRatio, imageSize } = await request.json();
 
   if (!prompt || typeof prompt !== "string") {
     return NextResponse.json({ error: "El prompt es obligatorio" }, { status: 400 });
@@ -17,18 +17,24 @@ export async function POST(request: NextRequest) {
 
   try {
     const parts: Record<string, unknown>[] = [];
-    if (previousImage) {
-      parts.push({
-        inlineData: {
-          mimeType: previousMimeType || "image/png",
-          data: previousImage,
-        },
+    
+    if (referenceImages && Array.isArray(referenceImages)) {
+      referenceImages.forEach((img: any) => {
+        if (img.data) {
+          parts.push({
+            inlineData: {
+              mimeType: img.mimeType || "image/png",
+              data: img.data,
+            },
+          });
+        }
       });
     }
+
     parts.push({ text: prompt });
 
     const sizeMap: Record<number, string> = {
-      512: "0.5K",
+      512: "512",
       1024: "1K",
       2048: "2K",
       4096: "4K",

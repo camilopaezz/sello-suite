@@ -27,7 +27,13 @@ export async function POST(request: NextRequest) {
     );
 
     const title = result.response.text().trim();
-    return NextResponse.json({ title });
+    const usageMetadata = result.response.usageMetadata;
+    const usage = usageMetadata ? {
+      promptTokens: usageMetadata.promptTokenCount,
+      completionTokens: usageMetadata.candidatesTokenCount,
+    } : undefined;
+
+    return NextResponse.json({ title, usage });
   } catch {
     return NextResponse.json({
       title: `Chat del ${new Date().toLocaleDateString()}`,

@@ -103,12 +103,14 @@ export async function listConversations(): Promise<ConversationMeta[]> {
         .filter((c) => c.messages && c.messages.length > 0)
         .map((c) => {
           const imgMsg = c.messages.find((m) => m.imageData);
+          const totalCost = c.messages.reduce((sum, m) => sum + (m.costCOP || 0), 0);
           return {
             id: c.id,
             title: c.title || "New Chat",
             createdAt: c.createdAt ?? 0,
             updatedAt: c.updatedAt ?? 0,
             thumbnail: imgMsg?.imageData,
+            totalCost,
           };
         });
       meta.sort((a, b) => b.updatedAt - a.updatedAt);

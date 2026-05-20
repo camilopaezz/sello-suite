@@ -9,6 +9,7 @@ import {
   exportToJsonFile,
 } from "@/lib/storage";
 import type { ExportData } from "@/lib/types";
+import { formatCOP } from "@/lib/exchange-rate";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -221,9 +222,16 @@ function SidebarContent({
                         <p className="truncate text-sm font-medium">
                           {conv.title}
                         </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {formatRelativeTime(conv.updatedAt)}
-                        </p>
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatRelativeTime(conv.updatedAt)}
+                          </p>
+                          {conv.totalCost && conv.totalCost > 0 ? (
+                            <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 select-none">
+                              {formatCOP(conv.totalCost)}
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
                       <Button
                         variant="ghost"

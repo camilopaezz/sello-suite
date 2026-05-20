@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { Message } from "@/lib/types";
+import { computeDimensions } from "@/lib/types";
+import { formatCOP } from "@/lib/exchange-rate";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -101,7 +103,7 @@ export function ChatMessage({
             <p className="text-sm text-muted-foreground leading-relaxed">
               {message.content}
             </p>
-            <div className="overflow-hidden rounded-lg border border-border/70 bg-muted/30">
+            <div className="relative overflow-hidden rounded-lg border border-border/70 bg-muted/30">
               <Image
                 src={dataUrl}
                 alt="Generated image"
@@ -110,6 +112,18 @@ export function ChatMessage({
                 className="h-auto max-h-[75vh] w-full object-contain"
                 unoptimized
               />
+              <div className="absolute right-2.5 top-2.5 flex gap-1.5 select-none">
+                {message.aspectRatio && message.imageSize && (
+                  <div className="rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm shadow-sm transition-opacity hover:bg-black/75">
+                    {computeDimensions(message.aspectRatio, message.imageSize)}
+                  </div>
+                )}
+                {message.costCOP && (
+                  <div className="rounded-md bg-emerald-600/80 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm shadow-sm transition-opacity hover:bg-emerald-600">
+                    {formatCOP(message.costCOP)}
+                  </div>
+                )}
+              </div>
             </div>
             <details className="group">
               <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
@@ -142,17 +156,56 @@ export function ChatMessage({
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <Card
-        className={`max-w-xl rounded-2xl border border-border/70 py-0 shadow-sm ${
-          isUser
-            ? "bg-primary text-primary-foreground rounded-br-md"
-            : "bg-card/80 text-foreground rounded-bl-md"
-        }`}
-      >
-        <CardContent className="px-4 py-3 text-sm leading-relaxed">
-          {message.content}
-        </CardContent>
-      </Card>
+      <div className={`flex max-w-[85%] flex-col gap-2 ${isUser ? "items-end" : "items-start"}`}>
+        {isUser && (message.images || message.imageData) && (
+          <div className={`grid gap-2 ${
+            (message.images?.length || 1) > 1 ? "grid-cols-2" : "grid-cols-1"
+          }`}>
+            {message.images ? (
+              message.images.map((img, idx) => (
+                <div key={idx} className="relative group overflow-hidden rounded-2xl border border-border/50 bg-muted/20 shadow-sm transition-all hover:shadow-md">
+                  <Image
+                    src={`data:${img.mimeType || "image/png"};base64,${img.data}`}
+                    alt={`User uploaded image ${idx + 1}`}
+                    width={200}
+                    height={200}
+                    className="h-auto max-h-60 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    unoptimized
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="relative group overflow-hidden rounded-2xl border border-border/50 bg-muted/20 shadow-sm transition-all hover:shadow-md">
+                <Image
+                  src={`data:${message.mimeType || "image/png"};base64,${message.imageData}`}
+                  alt="User uploaded image"
+                  width={200}
+                  height={200}
+                  className="h-auto max-h-60 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  unoptimized
+                />
+              </div>
+            )}
+          </div>
+        )}
+        
+        <Card
+          className={`rounded-2xl border border-border/70 py-0 shadow-sm ${
+            isUser
+              ? "bg-primary text-primary-foreground rounded-br-md"
+              : "bg-card/80 text-foreground rounded-bl-md"
+          }`}
+        >
+          <CardContent className="relative px-4 pb-4 pt-3 text-sm leading-relaxed">
+            {message.content}
+            {!isUser && message.costCOP && (
+              <span className="absolute bottom-1 right-2.5 select-none text-[8px] font-semibold text-emerald-600 dark:text-emerald-400 opacity-70">
+                {formatCOP(message.costCOP)}
+              </span>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
